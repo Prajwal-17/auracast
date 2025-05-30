@@ -1,14 +1,32 @@
 import express, { Request, Response } from "express"
 import dotenv from "dotenv"
+import { createServer } from "node:http"
+import { Server } from "socket.io";
+import { setupSocket } from "./socket/socket";
 
 dotenv.config()
+
 const app = express();
 app.use(express.json())
+
+const httpServer = createServer(app);
+
+export const io = new Server(httpServer, {
+  cors: {
+    origin: ["http://localhost:5173"]
+  }
+})
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ msg: "Request received" })
 })
 
-app.listen(3000, () => {
-  console.log("Listening to port 3000")
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).json("Server Healthy!")
+})
+
+setupSocket(io)
+
+httpServer.listen(process.env.PORT || 3000, () => {
+  console.log("Server Listening to port", process.env.PORT)
 })
