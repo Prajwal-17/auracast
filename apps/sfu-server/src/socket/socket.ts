@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 
 export function setupSocket(io: Server) {
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
+    console.log("User Connected:", socket.id);
 
     io.emit("message", "Hello world");
 
@@ -12,7 +12,7 @@ export function setupSocket(io: Server) {
     });
 
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
+      console.log("User Disconnected:", socket.id);
     });
   });
 }

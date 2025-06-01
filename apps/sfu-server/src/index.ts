@@ -3,6 +3,7 @@ import dotenv from "dotenv"
 import { createServer } from "node:http"
 import { Server } from "socket.io";
 import { setupSocket } from "./socket/socket";
+import { worker } from "./mediasoup/worker";
 
 dotenv.config()
 
@@ -13,7 +14,7 @@ const httpServer = createServer(app);
 
 export const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:5173"]
+    origin: ["http://localhost:3000"]
   }
 })
 
@@ -26,7 +27,8 @@ app.get("/health", (req: Request, res: Response) => {
 })
 
 setupSocket(io)
+worker()
 
-httpServer.listen(process.env.PORT || 3000, () => {
+httpServer.listen(process.env.PORT || 3001, () => {
   console.log("Server Listening to port", process.env.PORT)
 })
