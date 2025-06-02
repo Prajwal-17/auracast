@@ -2,14 +2,11 @@ import { Server } from "socket.io";
 
 export function setupSocket(io: Server) {
   io.on("connection", (socket) => {
-    console.log("User Connected:", socket.id);
 
-    io.emit("message", "Hello world");
-
-    socket.on("message", (msg) => {
-      console.log("Received message:", msg);
-      socket.emit("message", "Received: " + msg);
-    });
+    socket.on("join-room", (msg) => {
+      socket.join(msg)
+    })
+    console.log(socket.rooms)
 
     socket.on("disconnect", () => {
       console.log("User Disconnected:", socket.id);
