@@ -9,7 +9,7 @@ export type MediasoupStateType = {
 }
 export const mediasoupState: MediasoupStateType = {
   worker: null,
-  router: new Map(),
+  router: new Map(),  // -> <roomId, router>
   transports: new Map(),
   producers: new Map(),
   consumers: new Map()

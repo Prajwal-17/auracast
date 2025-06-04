@@ -1,8 +1,7 @@
 import * as mediasoup from "mediasoup"
 import { mediasoupState } from "./mediasoupState"
-import { v4 as uuid } from "uuid"
 
-export async function createRouter() {
+export async function createRouter(roomId: string) {
   const worker = mediasoupState.worker;
 
   const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [
@@ -42,8 +41,7 @@ export async function createRouter() {
       throw new Error("Router creation failed")
     }
 
-    const routerId = `router_${uuid()}`;
-    mediasoupState.router.set(routerId, router)
+    mediasoupState.router.set(roomId, router)
 
   } catch (error) {
     console.error("Error occured in router", error)

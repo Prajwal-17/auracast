@@ -13,6 +13,9 @@ export default function Studio() {
   const [socketId, setSocketId] = useState<string>("");
   const [roomId, setRoomId] = useState<string>("");
 
+  const [producers, setProducers] = useState([]);
+  const [consumers, setConsumers] = useState([]);
+
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
 
@@ -82,17 +85,47 @@ export default function Studio() {
                     "connect",
                     ({ dtlsParameters }, callback) => {
                       socket.emit(
-                        "send-trasnport-connect",
+                        "send-transport-connect",
                         { socketId, dtlsParameters },
                         callback,
                       );
                     },
                   );
+
+                  sendTransport.on(
+                    "produce",
+                    async ({ kind, rtpParameters }, callback) => {
+                      try {
+                        socket.emit(
+                          "transport-produce",
+                          { socketId, kind, rtpParameters },
+                          ({ id }: { id: string }) => {
+                            callback({ id });
+                          },
+                        );
+                      } catch (error) {
+                        console.error("Error while sending Transport", error);
+                      }
+                    },
+                  );
+
+                  const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: true,
+                  });
+
+                  // ------------------------------
+                  // create recv Transport
                 } catch (error) {
                   console.log(error);
                 }
               },
             );
+
+            socket.on("new-producer", (data) => {
+              // store the data in state
+              // consume
+            });
           } catch (error) {
             console.error("Error occured in RtpCapabilities", error);
           }

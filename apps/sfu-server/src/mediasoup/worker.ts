@@ -1,5 +1,4 @@
 import * as mediasoup from "mediasoup"
-import { createRouter } from "./router"
 import { mediasoupState } from "./mediasoupState"
 
 export async function worker() {
@@ -18,7 +17,6 @@ export async function worker() {
     }
 
     mediasoupState.worker = worker;
-    createRouter()
 
     worker.on("died", (error) => {
       console.error("Worker died", error);
