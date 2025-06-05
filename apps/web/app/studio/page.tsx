@@ -1,17 +1,24 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { connectSocket, disconnectSocket, socketInstance } from "../socket";
 import { useEffect, useRef, useState } from "react";
 import short from "short-uuid";
 import { Socket } from "socket.io-client";
 import * as mediasoupClient from "mediasoup-client";
+import {
+  connectSocket,
+  disconnectSocket,
+  socketInstance,
+} from "@/lib/socket/socket";
+import { useMediasoupStore } from "@/store/mediasoupStore";
 
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
 
-  const [socketId, setSocketId] = useState<string>("");
-  const [roomId, setRoomId] = useState<string>("");
+  const roomId = useMediasoupStore((state) => state.roomId);
+  const setRoomId = useMediasoupStore((state) => state.setRoomId);
+  const socketId = useMediasoupStore((state) => state.socketId);
+  const setSocketId = useMediasoupStore((state) => state.setSocketId);
 
   const [producers, setProducers] = useState([]);
   const [consumers, setConsumers] = useState([]);
