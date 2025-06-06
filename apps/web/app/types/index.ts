@@ -2,7 +2,7 @@ export type RouterObjectsType = {
   id: string,
   socketId: string,
   type: RouterType,
-  mediaType: string
+  // mediaType: string
 }
 
 export enum RouterType {

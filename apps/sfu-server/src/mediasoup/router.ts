@@ -40,9 +40,9 @@ export async function createRouter(roomId: string) {
     if (!router) {
       throw new Error("Router creation failed")
     }
-
     mediasoupState.router.set(roomId, router)
 
+    return router
   } catch (error) {
     console.error("Error occured in router", error)
   }

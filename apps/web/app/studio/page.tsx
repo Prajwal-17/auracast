@@ -12,6 +12,12 @@ import {
 } from "@/lib/socket/socket";
 import { useMediasoupStore } from "@/store/mediasoupStore";
 
+type TransportType = {
+  id: string;
+  socketId: string;
+  type: string;
+};
+
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
 
@@ -20,11 +26,18 @@ export default function Studio() {
   const socketId = useMediasoupStore((state) => state.socketId);
   const setSocketId = useMediasoupStore((state) => state.setSocketId);
 
-  const [producers, setProducers] = useState([]);
-  const [consumers, setConsumers] = useState([]);
+  const [transports, setTransports] = useState<TransportType[]>([]);
+
+  // const [producers, setProducers] = useState([]);
+  // const [consumers, setConsumers] = useState([]);
 
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
+  let recvTransport: mediasoupClient.types.Transport;
+
+  useEffect(() => {
+    console.log("transports", transports);
+  }, transports);
 
   // add auth check in socket
   useEffect(() => {
@@ -59,7 +72,9 @@ export default function Studio() {
         return;
       }
 
-      setRoomId(short().generate());
+      const newRoomId = short().generate();
+      setRoomId(newRoomId);
+
       socket.emit("join-room", roomId);
 
       socket.emit(
@@ -67,6 +82,7 @@ export default function Studio() {
         { roomId: roomId },
         async (rtpCapabilities: mediasoupClient.types.RtpCapabilities) => {
           try {
+            // add error catch
             device = new mediasoupClient.Device();
             await device.load({ routerRtpCapabilities: rtpCapabilities });
 
@@ -77,6 +93,8 @@ export default function Studio() {
                 transportOptions: mediasoupClient.types.TransportOptions,
               ) => {
                 try {
+                  console.log("inside send trans");
+                  console.log(transportOptions);
                   sendTransport = device.createSendTransport({
                     ...transportOptions,
                     iceServers: [
@@ -129,15 +147,72 @@ export default function Studio() {
               },
             );
 
-            socket.on("new-producer", (data) => {
-              // store the data in state
-              // consume
-            });
+            socket.emit(
+              "createRecvTransport",
+              async (
+                transportOptions: mediasoupClient.types.TransportOptions,
+              ) => {
+                recvTransport = device.createRecvTransport({
+                  ...transportOptions,
+                  iceServers: [
+                    {
+                      urls:
+                        process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
+                        "stun:stun.l.google.com:19302",
+                    },
+                  ],
+                });
+
+                recvTransport.on("connect", ({ dtlsParameters }, callback) => {
+                  socket.emit(
+                    "recv-transport-connect",
+                    { socketId, dtlsParameters },
+                    ({ id }: { id: string }) => {},
+                  );
+                });
+              },
+            );
+
+            // socket.on(
+            //   "new-producer",
+            //   async ({
+            //     id,
+            //     type,
+            //     mediaType,
+            //     socketId,
+            //   }: {
+            //     id: string;
+            //     type: string;
+            //     mediaType: string;
+            //     socketId: string;
+            //   }) => {
+            //     if (id === sendTransport.id) {
+            //       return;
+            //     }
+
+            //     socket.emit(
+            //       "transport-consume",
+            //       {
+            //         id: id,
+            //         socketId: socketId,
+            //         rtpCapabilities: device.rtpCapabilities,
+            //       },
+            //       (data: any) => {},
+            //     );
+            //   },
+            // );
           } catch (error) {
             console.error("Error occured in RtpCapabilities", error);
           }
         },
       );
+
+      socket.on("send-transport-data", ({ id, socketId, type }) => {
+        const transportExist = transports.find((t) => t.id === id);
+        if (!transportExist) {
+          setTransports([...transports, { id, socketId, type }]);
+        }
+      });
     } catch (error) {
       console.error(error);
     }

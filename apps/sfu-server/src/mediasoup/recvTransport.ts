@@ -2,11 +2,10 @@ import { mediasoupState } from "./mediasoupState";
 import { getRouter } from "./utils";
 import { v4 as uuid } from "uuid"
 
-export async function sendTransportFnc(roomId: string) {
+export async function recvTransportFnc(roomId: string) {
   try {
     const router = getRouter(roomId)
-    console.log(router, "in getrouter")
-    const sendTransport = await router?.createWebRtcTransport({
+    const recvTransport = await router?.createWebRtcTransport({
       listenIps: [
         {
           ip: "0.0.0.0"
@@ -26,20 +25,20 @@ export async function sendTransportFnc(roomId: string) {
       preferUdp: true
     });
 
-    if (!sendTransport) {
+    if (!recvTransport) {
       throw new Error("Failed to create send transport");
     }
 
-    const sendTransportId = `send_${uuid()}`
-    mediasoupState.transports.set(sendTransportId, sendTransport)
+    const recvTransportId = `recv_${uuid()}`
+    mediasoupState.transports.set(recvTransportId, recvTransport)
 
     return {
-      id: sendTransport.id,
-      iceCandidates: sendTransport.iceCandidates,
-      iceParameters: sendTransport.iceParameters,
-      dtlsParameters: sendTransport.dtlsParameters
+      id: recvTransport.id,
+      iceCandidates: recvTransport.iceCandidates,
+      iceParameters: recvTransport.iceParameters,
+      dtlsParameters: recvTransport.dtlsParameters
     }
   } catch (error) {
-    console.error("Error occured sendTransport", error)
+    console.error("Error occured recvTransport", error)
   }
 }
