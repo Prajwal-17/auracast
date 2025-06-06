@@ -1,5 +1,5 @@
-import { createRouter } from "@/mediasoup/router";
 import { Socket } from "socket.io";
+import { createRouter } from "../../mediasoup/router";
 
 export function handleRoomJoin(socket: Socket) {
   socket.on("join-room", async (roomId) => {

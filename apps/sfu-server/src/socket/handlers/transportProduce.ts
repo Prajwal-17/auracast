@@ -1,7 +1,7 @@
-import { mediasoupState } from "@/mediasoup/mediasoupState";
-import { getSendTransport } from "@/mediasoup/utils";
 import { Socket } from "socket.io";
 import { v4 as uuid } from "uuid"
+import { getSendTransport } from "../../mediasoup/utils";
+import { mediasoupState } from "../../mediasoup/mediasoupState";
 
 export function transportProduce(socket: Socket) {
   socket.on("transport-produce", async ({ socketId, kind, rtpParameters }, callback) => {

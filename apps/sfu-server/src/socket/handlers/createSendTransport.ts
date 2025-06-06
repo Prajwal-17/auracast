@@ -1,6 +1,6 @@
-import { sendTransportFnc } from "@/mediasoup/sendTransport";
-import { getSendTransport } from "@/mediasoup/utils";
 import { Socket } from "socket.io";
+import { sendTransportFnc } from "../../mediasoup/sendTransport";
+import { getSendTransport } from "../../mediasoup/utils";
 
 export function createSendTransport(socket: Socket) {
   socket.on("createSendTansport", async (roomId, callback) => {

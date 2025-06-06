@@ -1,9 +1,4 @@
-import { mediasoupState } from "@/mediasoup/mediasoupState";
-import { createRouter } from "@/mediasoup/router";
-import { sendTransportFnc } from "@/mediasoup/sendTransport";
-import { getRouter, getSendTransport } from "@/mediasoup/utils";
 import { Server } from "socket.io";
-import { v4 as uuid } from "uuid"
 import { handleRoomJoin } from "./handlers/joinRoom";
 import { createSendTransport } from "./handlers/createSendTransport";
 import { transportProduce } from "./handlers/transportProduce";

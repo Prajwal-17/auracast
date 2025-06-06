@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { getRouter } from "@/mediasoup/utils";
+import { getRouter } from "../../mediasoup/utils";
 
 export default function handleGetRtpCapabilities(socket: Socket) {
   socket.on("getRtpCapabilities", (roomId, callback) => {
