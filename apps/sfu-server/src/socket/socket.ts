@@ -5,36 +5,38 @@ import { getRecvTransport, getRouter, getSendTransport } from "../mediasoup/util
 import { createRouter } from "../mediasoup/router";
 import { sendTransportFnc } from "../mediasoup/sendTransport";
 import { recvTransportFnc } from "../mediasoup/recvTransport";
+import * as mediasoup from "mediasoup"
 
 export async function setupSocket(io: Server) {
 
-  setInterval(() => {
-    // console.log("worker", mediasoupState.worker)
-    console.log("routers", mediasoupState.router.keys())
-    console.log("producers", mediasoupState.producers.keys());
-    console.log("consumers", mediasoupState.consumers.keys());
-    console.log("transports", mediasoupState.transports.keys())
-  }, 2000);
+  // setInterval(() => {
+  // console.log("worker", mediasoupState.worker)
+  // console.log("routers", mediasoupState.router.keys())
+  // console.log("producers", mediasoupState.producers.keys());
+  // console.log("consumers", mediasoupState.consumers.keys());
+  // console.log("transports", mediasoupState.transports.keys())
+  // }, 2000);
 
   io.on("connection", (socket) => {
 
-    socket.on("join-room", async (roomId) => {
+    socket.on("join-room", async (roomId, callback) => {
       try {
         socket.join(roomId)
         await createRouter(roomId)
+        callback()
       } catch (error) {
         console.error("Error joining room", error)
       }
     });
 
-    socket.on("getRtpCapabilities", async (roomId, callback) => {
+    socket.on("getRtpCapabilities", async (roomId: string, callback) => {
       try {
-        const router = await createRouter(roomId);
+        const router = getRouter(roomId)
 
         if (!router) {
           throw new Error("Router creation failed");
         }
-        callback(router?.rtpCapabilities);
+        callback(router.rtpCapabilities);
       } catch (error) {
         console.log(error)
       }
@@ -42,13 +44,11 @@ export async function setupSocket(io: Server) {
 
     socket.on("createSendTransport", async (roomId, callback) => {
       try {
-        console.log("inside")
         const sendTransportData = await sendTransportFnc(roomId)
 
         if (!sendTransportData) {
           throw new Error("Failed to create WebRTC send transport.");
         }
-        console.log(sendTransportData)
         callback(sendTransportData)
       } catch (error) {
         console.log("Error occured while creating send Transport", error)
@@ -72,6 +72,7 @@ export async function setupSocket(io: Server) {
 
     socket.on("transport-produce", async ({ socketId, kind, rtpParameters }, callback) => {
       try {
+        console.log("in trans pord")
         const sendTransport = getSendTransport(socketId);
         const producer = await sendTransport?.produce({ kind, rtpParameters })
 
@@ -82,13 +83,13 @@ export async function setupSocket(io: Server) {
         const producerId = `producer_${uuid()}`
         mediasoupState.producers.set(producerId, producer)
 
-        socket.broadcast.emit("new-producer", {
-          id: producerId,
-          type: "producer",
-          mediaType: "",
-          socketId: socket.id
-        });
-        callback({ id: producerId });
+        // socket.broadcast.emit("new-producer", {
+        //   id: producerId,
+        //   type: "producer",
+        //   mediaType: "",
+        //   socketId: socket.id
+        // });
+        callback(producerId);
       } catch (error) {
         console.error("Error producing stream", error)
       }

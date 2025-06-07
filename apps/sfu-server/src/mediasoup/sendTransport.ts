@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid"
 export async function sendTransportFnc(roomId: string) {
   try {
     const router = getRouter(roomId)
-    console.log(router, "in getrouter")
+
     const sendTransport = await router?.createWebRtcTransport({
       listenIps: [
         {

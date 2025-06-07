@@ -75,146 +75,110 @@ export default function Studio() {
       const newRoomId = short().generate();
       setRoomId(newRoomId);
 
-      socket.emit("join-room", roomId);
+      await socket.timeout(6000).emitWithAck("join-room", roomId);
 
-      socket.emit(
-        "getRtpCapabilities",
-        { roomId: roomId },
-        async (rtpCapabilities: mediasoupClient.types.RtpCapabilities) => {
+      const rtpCapabilities = await socket
+        .timeout(6000)
+        .emitWithAck("getRtpCapabilities", roomId);
+
+      // check rtp cap
+
+      device = new mediasoupClient.Device();
+      await device.load({ routerRtpCapabilities: rtpCapabilities });
+
+      const sendTransportOptions = await socket
+        .timeout(6000)
+        .emitWithAck("createSendTransport", roomId);
+
+      // check for send transport
+
+      sendTransport = device.createSendTransport({
+        ...sendTransportOptions,
+        iceServers: [
+          {
+            urls:
+              process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
+              "stun:stun.l.google.com:19302",
+          },
+        ],
+      });
+
+      sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
+        try {
+          await socket.timeout(6000).emitWithAck("send-transport-connect", {
+            socketId,
+            dtlsParameters,
+          });
+
+          // error check here
+
+          callback();
+        } catch (error) {
+          console.log(error);
+        }
+      });
+
+      sendTransport.on(
+        "produce",
+        async ({ kind, rtpParameters }, mediasoupCallback) => {
           try {
-            // add error catch
-            device = new mediasoupClient.Device();
-            await device.load({ routerRtpCapabilities: rtpCapabilities });
+            const producerId = await socket
+              .timeout(6000)
+              .emitWithAck("transport-produce", {
+                socketId,
+                kind,
+                rtpParameters,
+              });
+            console.log("producer", producerId);
 
-            socket.emit(
-              "createSendTransport",
-              { roomId: roomId },
-              async (
-                transportOptions: mediasoupClient.types.TransportOptions,
-              ) => {
-                try {
-                  console.log("inside send trans");
-                  console.log(transportOptions);
-                  sendTransport = device.createSendTransport({
-                    ...transportOptions,
-                    iceServers: [
-                      {
-                        urls:
-                          process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
-                          "stun:stun.l.google.com:19302",
-                      },
-                    ],
-                  });
-
-                  sendTransport.on(
-                    "connect",
-                    ({ dtlsParameters }, callback) => {
-                      socket.emit(
-                        "send-transport-connect",
-                        { socketId, dtlsParameters },
-                        callback,
-                      );
-                    },
-                  );
-
-                  sendTransport.on(
-                    "produce",
-                    async ({ kind, rtpParameters }, callback) => {
-                      try {
-                        socket.emit(
-                          "transport-produce",
-                          { socketId, kind, rtpParameters },
-                          ({ id }: { id: string }) => {
-                            callback({ id });
-                          },
-                        );
-                      } catch (error) {
-                        console.error("Error while sending Transport", error);
-                      }
-                    },
-                  );
-
-                  const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: true,
-                  });
-
-                  // ------------------------------
-                  // create recv Transport
-                } catch (error) {
-                  console.log(error);
-                }
-              },
-            );
-
-            socket.emit(
-              "createRecvTransport",
-              async (
-                transportOptions: mediasoupClient.types.TransportOptions,
-              ) => {
-                recvTransport = device.createRecvTransport({
-                  ...transportOptions,
-                  iceServers: [
-                    {
-                      urls:
-                        process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
-                        "stun:stun.l.google.com:19302",
-                    },
-                  ],
-                });
-
-                recvTransport.on("connect", ({ dtlsParameters }, callback) => {
-                  socket.emit(
-                    "recv-transport-connect",
-                    { socketId, dtlsParameters },
-                    ({ id }: { id: string }) => {},
-                  );
-                });
-              },
-            );
-
-            // socket.on(
-            //   "new-producer",
-            //   async ({
-            //     id,
-            //     type,
-            //     mediaType,
-            //     socketId,
-            //   }: {
-            //     id: string;
-            //     type: string;
-            //     mediaType: string;
-            //     socketId: string;
-            //   }) => {
-            //     if (id === sendTransport.id) {
-            //       return;
-            //     }
-
-            //     socket.emit(
-            //       "transport-consume",
-            //       {
-            //         id: id,
-            //         socketId: socketId,
-            //         rtpCapabilities: device.rtpCapabilities,
-            //       },
-            //       (data: any) => {},
-            //     );
-            //   },
-            // );
+            mediasoupCallback(producerId);
           } catch (error) {
-            console.error("Error occured in RtpCapabilities", error);
+            console.log(error);
           }
         },
       );
 
-      socket.on("send-transport-data", ({ id, socketId, type }) => {
-        const transportExist = transports.find((t) => t.id === id);
-        if (!transportExist) {
-          setTransports([...transports, { id, socketId, type }]);
+      const stream = navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+
+      // create recv transrpot
+
+      const recvTransportOptions = await socket
+        .timeout(6000)
+        .emitWithAck("createRecvTransport", roomId);
+
+      recvTransport = device.createRecvTransport({
+        ...recvTransportOptions,
+        iceServers: [
+          {
+            urls:
+              process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
+              "stun:stun.l.google.com:19302",
+          },
+        ],
+      });
+
+      recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
+        try {
+          await socket.timeout(6000).emitWithAck("recv-transport-connect", {
+            socketId,
+            dtlsParameters,
+          });
+
+          callback();
+        } catch (error) {
+          console.log("Error occured in recvTransport connection", error);
         }
       });
+
+      // socket new producer
+
+      //socket new producer data
+      //socket new consumer data
     } catch (error) {
-      console.error(error);
+      console.error("Webrtc init failed", error);
     }
   }
 
