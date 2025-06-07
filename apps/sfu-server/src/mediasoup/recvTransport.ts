@@ -1,6 +1,5 @@
 import { mediasoupState } from "./mediasoupState";
 import { getRouter } from "./utils";
-import { v4 as uuid } from "uuid"
 
 export async function recvTransportFnc(roomId: string) {
   try {
@@ -29,11 +28,11 @@ export async function recvTransportFnc(roomId: string) {
       throw new Error("Failed to create send transport");
     }
 
-    const recvTransportId = `recv_${uuid()}`
-    mediasoupState.transports.set(recvTransportId, recvTransport)
+    const recvTransportId = recvTransport.id;
+    mediasoupState.transports.set(recvTransportId, recvTransport);
 
     return {
-      id: recvTransport.id,
+      id: recvTransportId,
       iceCandidates: recvTransport.iceCandidates,
       iceParameters: recvTransport.iceParameters,
       dtlsParameters: recvTransport.dtlsParameters

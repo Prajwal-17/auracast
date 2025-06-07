@@ -1,6 +1,5 @@
 import { mediasoupState } from "./mediasoupState";
 import { getRouter } from "./utils";
-import { v4 as uuid } from "uuid"
 
 export async function sendTransportFnc(roomId: string) {
   try {
@@ -30,11 +29,11 @@ export async function sendTransportFnc(roomId: string) {
       throw new Error("Failed to create send transport");
     }
 
-    const sendTransportId = `send_${uuid()}`
-    mediasoupState.transports.set(sendTransportId, sendTransport)
+    const sendTransportId = sendTransport.id;
+    mediasoupState.transports.set(sendTransportId, sendTransport);
 
     return {
-      id: sendTransport.id,
+      id: sendTransportId,
       iceCandidates: sendTransport.iceCandidates,
       iceParameters: sendTransport.iceParameters,
       dtlsParameters: sendTransport.dtlsParameters

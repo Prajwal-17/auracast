@@ -28,9 +28,6 @@ export default function Studio() {
 
   const [transports, setTransports] = useState<TransportType[]>([]);
 
-  // const [producers, setProducers] = useState([]);
-  // const [consumers, setConsumers] = useState([]);
-
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
   let recvTransport: mediasoupClient.types.Transport;
@@ -103,14 +100,15 @@ export default function Studio() {
         ],
       });
 
+      const sendTransportId = sendTransport.id;
       sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
           await socket.timeout(6000).emitWithAck("send-transport-connect", {
-            socketId,
+            sendTransportId,
             dtlsParameters,
           });
 
-          // error check here
+          // error check
 
           callback();
         } catch (error) {
@@ -125,11 +123,11 @@ export default function Studio() {
             const producerId = await socket
               .timeout(6000)
               .emitWithAck("transport-produce", {
-                socketId,
+                sendTransportId,
                 kind,
                 rtpParameters,
               });
-            console.log("producer", producerId);
+            console.log("producer id ", producerId);
 
             mediasoupCallback(producerId);
           } catch (error) {
@@ -138,10 +136,15 @@ export default function Studio() {
         },
       );
 
-      const stream = navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
+
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = stream.getAudioTracks()[0];
+      await sendTransport.produce({ track: videoTrack });
+      await sendTransport.produce({ track: audioTrack });
 
       // create recv transrpot
 
@@ -160,10 +163,11 @@ export default function Studio() {
         ],
       });
 
+      const recvTransportId = recvTransport.id;
       recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
           await socket.timeout(6000).emitWithAck("recv-transport-connect", {
-            socketId,
+            recvTransportId,
             dtlsParameters,
           });
 
@@ -173,10 +177,42 @@ export default function Studio() {
         }
       });
 
-      // socket new producer
+      socket.on("new-producer", async ({ producerId, producerSocketId }) => {
+        try {
+          if (producerSocketId === socketId) {
+            return;
+          }
 
-      //socket new producer data
-      //socket new consumer data
+          const recvTransportId = recvTransport.id;
+          const consumerData = await socket
+            .timeout(6000)
+            .emitWithAck("transport-consume", {
+              roomId,
+              recvTransportId,
+              producerId,
+              rtpCapabilities: device.rtpCapabilities,
+            });
+
+          const consumer = await recvTransport.consume({
+            producerId: consumerData.producerId,
+            id: consumerData.id,
+            kind: consumerData.kind,
+            rtpParameters: consumerData.rtpParameters,
+          });
+
+          // check for consumer
+
+          const resumeResponse = await socket
+            .timeout(6000)
+            .emitWithAck("consumer-resume", consumerData.id);
+
+          if (!resumeResponse.success) {
+            consumer.resume();
+          }
+        } catch (error) {
+          console.log("Error occured in consume", error);
+        }
+      });
     } catch (error) {
       console.error("Webrtc init failed", error);
     }
