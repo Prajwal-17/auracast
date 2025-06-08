@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { mediasoupState } from "../mediasoup/mediasoupState";
-import { getConsumer, getRecvTransport, getRouter, getSendTransport } from "../mediasoup/utils";
+import { getConsumer, getProducer, getRecvTransport, getRouter, getSendTransport } from "../mediasoup/utils";
 import { createRouter } from "../mediasoup/router";
 import { sendTransportFnc } from "../mediasoup/sendTransport";
 import { recvTransportFnc } from "../mediasoup/recvTransport";
@@ -18,10 +18,19 @@ export async function setupSocket(io: Server) {
 
   io.on("connection", (socket) => {
 
+    socket.on("create-room", async (roomId, callback) => {
+      try {
+        await socket.join(roomId)
+        await createRouter(roomId)
+        callback()
+      } catch (error) {
+        console.error("Error joining room", error)
+      }
+    });
+
     socket.on("join-room", async (roomId, callback) => {
       try {
-        socket.join(roomId)
-        await createRouter(roomId)
+        await socket.join(roomId)
         callback()
       } catch (error) {
         console.error("Error joining room", error)
@@ -65,10 +74,11 @@ export async function setupSocket(io: Server) {
       }
     });
 
-    socket.on("transport-produce", async ({ sendTransportId, kind, rtpParameters }, callback) => {
+    socket.on("transport-produce", async ({ roomId, sendTransportId, kind, rtpParameters }, callback) => {
       try {
+        const router = getRouter(roomId)
         const sendTransport = getSendTransport(sendTransportId);
-        const producer = await sendTransport?.produce({ kind, rtpParameters })
+        const producer = await sendTransport?.produce({ kind, rtpParameters, appData: { routerId: router?.id } })
 
         if (!producer) {
           console.error("No producer found");
@@ -78,10 +88,10 @@ export async function setupSocket(io: Server) {
         const producerId = producer.id
         mediasoupState.producers.set(producerId, producer)
 
-        socket.broadcast.emit("new-producer", {
-          id: producerId,
-          socketId: socket.id
-        });
+        io.in(roomId).emit("new-producer", {
+          producerId: producerId,
+          producerSocketId: socket.id
+        })
         callback(producerId);
       } catch (error) {
         console.error("Error producing stream", error)
@@ -113,8 +123,8 @@ export async function setupSocket(io: Server) {
 
     socket.on("transport-consume", async ({ roomId, recvTransportId, producerId, rtpCapabilities }, callback) => {
       try {
-        const recvTransport = getRecvTransport(recvTransportId)
         const router = getRouter(roomId)
+        const recvTransport = getRecvTransport(recvTransportId)
 
         if (!router?.canConsume({ producerId, rtpCapabilities })) {
           console.error("The router cannont consume");
@@ -124,7 +134,7 @@ export async function setupSocket(io: Server) {
         const consumer = await recvTransport?.consume({
           producerId,
           rtpCapabilities,
-          paused: false
+          paused: true
         });
 
         if (!consumer) {
@@ -147,7 +157,6 @@ export async function setupSocket(io: Server) {
     });
 
     socket.on("consumer-resume", async (consumerId, callback) => {
-      console.log("inside resume");
       const consumer = getConsumer(consumerId);
       if (consumer) {
         await consumer.resume();

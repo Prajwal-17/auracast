@@ -20,6 +20,7 @@ export async function sendTransportFnc(roomId: string) {
           // announcedIp: "::1",
         },
       ],
+      appData: { routerId: router.id, type: "send" },
       enableUdp: true,
       enableTcp: true,
       preferUdp: true

@@ -1,3 +1,4 @@
+// process.env.DEBUG = "mediasoup*"
 import express, { Request, Response } from "express"
 import dotenv from "dotenv"
 import { createServer } from "node:http"

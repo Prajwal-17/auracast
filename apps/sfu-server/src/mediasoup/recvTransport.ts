@@ -19,6 +19,7 @@ export async function recvTransportFnc(roomId: string) {
           // announcedIp: "::1",
         },
       ],
+      appData: { routerId: router.id, type: "recv" },
       enableUdp: true,
       enableTcp: true,
       preferUdp: true

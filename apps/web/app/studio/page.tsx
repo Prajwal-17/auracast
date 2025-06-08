@@ -67,8 +67,9 @@ export default function Studio() {
 
       const newRoomId = short().generate();
       setRoomId(newRoomId);
-      await socket.timeout(6000).emitWithAck("join-room", roomId);
-      startCall();
+      console.log("fe roomid", roomId);
+      await socket.timeout(6000).emitWithAck("create-room", newRoomId);
+      startCall(newRoomId);
     } catch (error) {
       console.log(error);
     }
@@ -83,13 +84,13 @@ export default function Studio() {
         return;
       }
       await socket.timeout(6000).emitWithAck("join-room", roomId);
-      startCall();
+      startCall(roomId);
     } catch (error) {
       console.log(error);
     }
   }
 
-  async function startCall() {
+  async function startCall(roomId: string) {
     try {
       const socket = socketRef.current;
 
@@ -97,7 +98,6 @@ export default function Studio() {
         console.warn("Socket not initialized yet");
         return;
       }
-      // const roomId = roomIdRef.current;
 
       const rtpCapabilities = await socket
         .timeout(6000)
@@ -148,6 +148,7 @@ export default function Studio() {
             const producerId = await socket
               .timeout(6000)
               .emitWithAck("transport-produce", {
+                roomId,
                 sendTransportId,
                 kind,
                 rtpParameters,
@@ -211,10 +212,13 @@ export default function Studio() {
           if (producerSocketId === socketId) {
             return;
           }
+          console.log("prod id ", producerId);
+          console.log("sock id ", producerSocketId);
 
           const recvTransportId = recvTransport.id;
+
           const consumerData = await socket
-            .timeout(6000)
+            .timeout(10000)
             .emitWithAck("transport-consume", {
               roomId,
               recvTransportId,
@@ -238,6 +242,7 @@ export default function Studio() {
           if (!resumeResponse.success) {
             consumer.resume();
           }
+          console.log("consuming started");
         } catch (error) {
           console.log("Error occured in consume", error);
         }
