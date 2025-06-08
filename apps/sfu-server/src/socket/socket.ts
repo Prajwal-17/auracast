@@ -1,5 +1,4 @@
 import { Server } from "socket.io";
-import { v4 as uuid } from "uuid"
 import { mediasoupState } from "../mediasoup/mediasoupState";
 import { getConsumer, getRecvTransport, getRouter, getSendTransport } from "../mediasoup/utils";
 import { createRouter } from "../mediasoup/router";
@@ -10,11 +9,11 @@ import * as mediasoup from "mediasoup"
 export async function setupSocket(io: Server) {
 
   // setInterval(() => {
-  // console.log("worker", mediasoupState.worker)
-  // console.log("routers", mediasoupState.router.keys())
-  // console.log("producers", mediasoupState.producers.keys());
-  // console.log("consumers", mediasoupState.consumers.keys());
-  // console.log("transports", mediasoupState.transports.keys())
+  //   console.log("worker", mediasoupState.worker)
+  //   console.log("routers", mediasoupState.router.keys())
+  //   console.log("producers", mediasoupState.producers.keys());
+  //   console.log("consumers", mediasoupState.consumers.keys());
+  //   console.log("transports", mediasoupState.transports.keys())
   // }, 2000);
 
   io.on("connection", (socket) => {

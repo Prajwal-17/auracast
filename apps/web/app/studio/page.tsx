@@ -20,21 +20,15 @@ type TransportType = {
 
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
+  const myVideoRef = useRef<HTMLVideoElement>(null);
+  const roomIdRef = useRef<string>(null);
 
-  const roomId = useMediasoupStore((state) => state.roomId);
-  const setRoomId = useMediasoupStore((state) => state.setRoomId);
   const socketId = useMediasoupStore((state) => state.socketId);
   const setSocketId = useMediasoupStore((state) => state.setSocketId);
-
-  const [transports, setTransports] = useState<TransportType[]>([]);
 
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
   let recvTransport: mediasoupClient.types.Transport;
-
-  useEffect(() => {
-    console.log("transports", transports);
-  }, transports);
 
   // add auth check in socket
   useEffect(() => {
@@ -70,7 +64,8 @@ export default function Studio() {
       }
 
       const newRoomId = short().generate();
-      setRoomId(newRoomId);
+      roomIdRef.current = newRoomId;
+      const roomId = roomIdRef.current;
 
       await socket.timeout(6000).emitWithAck("join-room", roomId);
 
@@ -140,6 +135,10 @@ export default function Studio() {
         audio: true,
         video: true,
       });
+
+      if (myVideoRef.current) {
+        myVideoRef.current.srcObject = stream;
+      }
 
       const videoTrack = stream.getVideoTracks()[0];
       const audioTrack = stream.getAudioTracks()[0];
@@ -223,6 +222,24 @@ export default function Studio() {
       <div>
         <div>Welcome to studio</div>
         <Button onClick={startCall}>Start Call</Button>
+        <div>
+          <video
+            ref={myVideoRef}
+            muted
+            autoPlay
+            playsInline
+            style={{
+              width: "300px",
+              margin: "5px",
+              height: "auto",
+              transform: "scaleX(-1)", // Mirror effect
+              display: "block",
+            }}
+          />
+          <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
+            My Video
+          </div>
+        </div>
       </div>
     </>
   );
