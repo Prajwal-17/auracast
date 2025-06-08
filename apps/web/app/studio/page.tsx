@@ -21,10 +21,12 @@ type TransportType = {
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
   const myVideoRef = useRef<HTMLVideoElement>(null);
-  const roomIdRef = useRef<string>(null);
+  // const roomIdRef = useRef<string>(null);
 
   const socketId = useMediasoupStore((state) => state.socketId);
   const setSocketId = useMediasoupStore((state) => state.setSocketId);
+
+  const [roomId, setRoomId] = useState("");
 
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
@@ -54,7 +56,7 @@ export default function Studio() {
     };
   }, []);
 
-  async function startCall() {
+  async function createRoom() {
     try {
       const socket = socketRef.current;
 
@@ -64,10 +66,38 @@ export default function Studio() {
       }
 
       const newRoomId = short().generate();
-      roomIdRef.current = newRoomId;
-      const roomId = roomIdRef.current;
-
+      setRoomId(newRoomId);
       await socket.timeout(6000).emitWithAck("join-room", roomId);
+      startCall();
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function joinRoom(roomId: string) {
+    try {
+      const socket = socketRef.current;
+
+      if (!socket) {
+        console.warn("Socket not initialized yet");
+        return;
+      }
+      await socket.timeout(6000).emitWithAck("join-room", roomId);
+      startCall();
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function startCall() {
+    try {
+      const socket = socketRef.current;
+
+      if (!socket) {
+        console.warn("Socket not initialized yet");
+        return;
+      }
+      // const roomId = roomIdRef.current;
 
       const rtpCapabilities = await socket
         .timeout(6000)
@@ -221,7 +251,7 @@ export default function Studio() {
     <>
       <div>
         <div>Welcome to studio</div>
-        <Button onClick={startCall}>Start Call</Button>
+        {/* <Button onClick={startCall}>Start Call</Button> */}
         <div>
           <video
             ref={myVideoRef}
@@ -239,6 +269,23 @@ export default function Studio() {
           <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
             My Video
           </div>
+        </div>
+
+        <div>
+          <div>
+            <input
+              type="text"
+              value={roomId}
+              className="border-2"
+              onChange={(e) => setRoomId(e.target.value)}
+            />
+          </div>
+          <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
+          <Button onClick={createRoom} className="my-4">
+            Create Room
+          </Button>
+          {roomId && <div>{roomId}</div>}
+          {roomId && <div>{roomId}</div>}
         </div>
       </div>
     </>
