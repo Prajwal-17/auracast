@@ -8,13 +8,13 @@ import * as mediasoup from "mediasoup"
 
 export async function setupSocket(io: Server) {
 
-  // setInterval(() => {
-  //   console.log("worker", mediasoupState.worker)
-  //   console.log("routers", mediasoupState.router.keys())
-  //   console.log("producers", mediasoupState.producers.keys());
-  //   console.log("consumers", mediasoupState.consumers.keys());
-  //   console.log("transports", mediasoupState.transports.keys())
-  // }, 2000);
+  setInterval(() => {
+    // console.log("worker", mediasoupState.worker)
+    console.log("routers", mediasoupState.router.keys())
+    console.log("producers", mediasoupState.producers.keys());
+    console.log("consumers", mediasoupState.consumers.keys());
+    console.log("transports", mediasoupState.transports.keys())
+  }, 2000);
 
   io.on("connection", (socket) => {
 

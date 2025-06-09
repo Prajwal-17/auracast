@@ -214,8 +214,8 @@ export default function Studio() {
           if (producerSocketId === socketId) {
             return;
           }
-          console.log("prod id ", producerId);
-          console.log("sock id ", producerSocketId);
+          // console.log("prod id ", producerId);
+          // console.log("sock id ", producerSocketId);
 
           const recvTransportId = recvTransport.id;
 
@@ -251,10 +251,11 @@ export default function Studio() {
 
           if (consumer.kind === "video" && opponentRef.current) {
             const stream = new MediaStream([videoConsumer.track]);
+            console.log("track", videoConsumer.track);
+            console.log("stream", stream);
             opponentRef.current.srcObject = stream;
             console.log("consuming");
           }
-          console.log("consuming started");
         } catch (error) {
           console.log("Error occured in consume", error);
         }

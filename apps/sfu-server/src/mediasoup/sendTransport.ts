@@ -8,16 +8,12 @@ export async function sendTransportFnc(roomId: string) {
     const sendTransport = await router?.createWebRtcTransport({
       listenIps: [
         {
-          ip: "0.0.0.0"
-          // announcedIp: "192.168.38.232",
+          ip: process.env.MEDIASOUP_LISTEN_IPV4 as string,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IPV4 as string,
         },
         {
-          ip: "127.0.0.1"
-          // announcedIp: "127.0.0.1",
-        },
-        {
-          ip: "::1"
-          // announcedIp: "::1",
+          ip: process.env.MEDIASOUP_LISTEN_IPV6 as string,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IPV6 as string
         },
       ],
       appData: { routerId: router.id, type: "send" },
