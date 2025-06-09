@@ -21,6 +21,7 @@ type TransportType = {
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
   const myVideoRef = useRef<HTMLVideoElement>(null);
+  const opponentRef = useRef<HTMLVideoElement>(null);
   // const roomIdRef = useRef<string>(null);
 
   const socketId = useMediasoupStore((state) => state.socketId);
@@ -31,6 +32,7 @@ export default function Studio() {
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
   let recvTransport: mediasoupClient.types.Transport;
+  let videoConsumer: mediasoupClient.types.Consumer;
 
   // add auth check in socket
   useEffect(() => {
@@ -212,8 +214,8 @@ export default function Studio() {
           if (producerSocketId === socketId) {
             return;
           }
-          console.log("prod id ", producerId);
-          console.log("sock id ", producerSocketId);
+          // console.log("prod id ", producerId);
+          // console.log("sock id ", producerSocketId);
 
           const recvTransportId = recvTransport.id;
 
@@ -242,7 +244,18 @@ export default function Studio() {
           if (!resumeResponse.success) {
             consumer.resume();
           }
-          console.log("consuming started");
+
+          if (consumer.kind === "video") {
+            videoConsumer = consumer;
+          }
+
+          if (consumer.kind === "video" && opponentRef.current) {
+            const stream = new MediaStream([videoConsumer.track]);
+            console.log("track", videoConsumer.track);
+            console.log("stream", stream);
+            opponentRef.current.srcObject = stream;
+            console.log("consuming");
+          }
         } catch (error) {
           console.log("Error occured in consume", error);
         }
@@ -273,6 +286,24 @@ export default function Studio() {
           />
           <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
             My Video
+          </div>
+        </div>
+        <div>
+          <video
+            ref={opponentRef}
+            muted
+            autoPlay
+            playsInline
+            style={{
+              width: "300px",
+              margin: "5px",
+              height: "auto",
+              transform: "scaleX(-1)", // Mirror effect
+              display: "block",
+            }}
+          />
+          <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
+            Opponent Video
           </div>
         </div>
 

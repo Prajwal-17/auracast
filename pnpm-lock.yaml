@@ -20,9 +20,9 @@ importers:
 
   apps/sfu-server:
     dependencies:
-      '@types/express':
-        specifier: ^5.0.2
-        version: 5.0.2
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
       express:
         specifier: ^5.1.0
         version: 5.1.0
@@ -32,9 +32,6 @@ importers:
       socket.io:
         specifier: ^4.8.1
         version: 4.8.1
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -42,9 +39,12 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      dotenv:
-        specifier: ^16.5.0
-        version: 16.5.0
+      '@types/express':
+        specifier: ^5.0.2
+        version: 5.0.2
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
   apps/web:
     dependencies:
