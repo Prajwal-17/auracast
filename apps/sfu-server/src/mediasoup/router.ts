@@ -40,7 +40,15 @@ export async function createRouter(roomId: string) {
     if (!router) {
       throw new Error("Router creation failed")
     }
-    mediasoupState.router.set(roomId, router)
+
+    const workerId = `${worker?.pid}`
+    mediasoupState.room.set(roomId, {
+      workerRef: workerId,
+      router,
+      transports: new Map(),
+      producers: new Map(),
+      consumers: new Map()
+    })
 
     return router
   } catch (error) {

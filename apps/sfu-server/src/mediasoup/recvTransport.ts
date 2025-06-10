@@ -1,9 +1,11 @@
 import { mediasoupState } from "./mediasoupState";
-import { getRouter } from "./utils";
+import { getRoom, getRouter } from "./utils";
 
 export async function recvTransportFnc(roomId: string) {
   try {
-    const router = getRouter(roomId)
+    const room = getRoom(roomId)
+    const router = room?.router;
+
     const recvTransport = await router?.createWebRtcTransport({
       listenIps: [
         {
@@ -26,7 +28,7 @@ export async function recvTransportFnc(roomId: string) {
     }
 
     const recvTransportId = recvTransport.id;
-    mediasoupState.transports.set(recvTransportId, recvTransport);
+    room?.transports.set(recvTransportId, recvTransport);
 
     return {
       id: recvTransportId,

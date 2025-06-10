@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { mediasoupState } from "../mediasoup/mediasoupState";
-import { getConsumer, getProducer, getRecvTransport, getRouter, getSendTransport } from "../mediasoup/utils";
+import { getConsumer, getProducer, getRecvTransport, getRoom, getRouter, getSendTransport } from "../mediasoup/utils";
 import { createRouter } from "../mediasoup/router";
 import { sendTransportFnc } from "../mediasoup/sendTransport";
 import { recvTransportFnc } from "../mediasoup/recvTransport";
@@ -9,11 +9,12 @@ import * as mediasoup from "mediasoup"
 export async function setupSocket(io: Server) {
 
   setInterval(() => {
+    // console.log("state", mediasoupState)
     // console.log("worker", mediasoupState.worker)
-    console.log("routers", mediasoupState.router.keys())
-    console.log("producers", mediasoupState.producers.keys());
-    console.log("consumers", mediasoupState.consumers.keys());
-    console.log("transports", mediasoupState.transports.keys())
+    // console.log("routers", mediasoupState.router.keys())
+    // console.log("producers", mediasoupState.producers.keys());
+    // console.log("consumers", mediasoupState.consumers.keys());
+    // console.log("transports", mediasoupState.transports.keys())
   }, 2000);
 
   io.on("connection", (socket) => {
@@ -64,9 +65,9 @@ export async function setupSocket(io: Server) {
       }
     });
 
-    socket.on("send-transport-connect", async ({ sendTransportId, dtlsParameters }, callback) => {
+    socket.on("send-transport-connect", async ({ roomId, sendTransportId, dtlsParameters }, callback) => {
       try {
-        const sendTransport = getSendTransport(sendTransportId);
+        const sendTransport = getSendTransport(roomId, sendTransportId);
         await sendTransport?.connect({ dtlsParameters });
         callback();
       } catch (error) {
@@ -76,8 +77,9 @@ export async function setupSocket(io: Server) {
 
     socket.on("transport-produce", async ({ roomId, sendTransportId, kind, rtpParameters }, callback) => {
       try {
-        const router = getRouter(roomId)
-        const sendTransport = getSendTransport(sendTransportId);
+        const room = getRoom(roomId);
+        const router = room?.router;
+        const sendTransport = getSendTransport(roomId, sendTransportId);
         const producer = await sendTransport?.produce({ kind, rtpParameters, appData: { routerId: router?.id } })
 
         if (!producer) {
@@ -86,7 +88,7 @@ export async function setupSocket(io: Server) {
         }
 
         const producerId = producer.id
-        mediasoupState.producers.set(producerId, producer)
+        room?.producers.set(producerId, producer)
 
         io.in(roomId).emit("new-producer", {
           producerId: producerId,
@@ -111,9 +113,9 @@ export async function setupSocket(io: Server) {
       }
     });
 
-    socket.on("recv-transport-connect", async ({ recvTransportId, dtlsParameters }, callback) => {
+    socket.on("recv-transport-connect", async ({ roomId, recvTransportId, dtlsParameters }, callback) => {
       try {
-        const recvTransport = getRecvTransport(recvTransportId);
+        const recvTransport = getRecvTransport(roomId, recvTransportId);
         await recvTransport?.connect({ dtlsParameters });
         callback();
       } catch (error) {
@@ -123,8 +125,9 @@ export async function setupSocket(io: Server) {
 
     socket.on("transport-consume", async ({ roomId, recvTransportId, producerId, rtpCapabilities }, callback) => {
       try {
-        const router = getRouter(roomId)
-        const recvTransport = getRecvTransport(recvTransportId)
+        const room = getRoom(roomId);
+        const router = room?.router;
+        const recvTransport = getRecvTransport(roomId, recvTransportId)
 
         if (!router?.canConsume({ producerId, rtpCapabilities })) {
           console.error("The router cannont consume");
@@ -143,7 +146,7 @@ export async function setupSocket(io: Server) {
         }
 
         const consumerId = consumer.id;
-        mediasoupState.consumers.set(consumerId, consumer)
+        room?.consumers.set(consumerId, consumer)
 
         callback({
           id: consumerId,
@@ -156,8 +159,8 @@ export async function setupSocket(io: Server) {
       }
     });
 
-    socket.on("consumer-resume", async (consumerId, callback) => {
-      const consumer = getConsumer(consumerId);
+    socket.on("consumer-resume", async ({ roomId, consumerId }, callback) => {
+      const consumer = getConsumer(roomId, consumerId);
       if (consumer) {
         await consumer.resume();
       }

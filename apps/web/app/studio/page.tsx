@@ -131,6 +131,7 @@ export default function Studio() {
       sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
           await socket.timeout(6000).emitWithAck("send-transport-connect", {
+            roomId,
             sendTransportId,
             dtlsParameters,
           });
@@ -199,6 +200,7 @@ export default function Studio() {
       recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
           await socket.timeout(6000).emitWithAck("recv-transport-connect", {
+            roomId,
             recvTransportId,
             dtlsParameters,
           });
@@ -239,7 +241,10 @@ export default function Studio() {
 
           const resumeResponse = await socket
             .timeout(6000)
-            .emitWithAck("consumer-resume", consumerData.id);
+            .emitWithAck("consumer-resume", {
+              roomId: roomId,
+              consumerId: consumer.id,
+            });
 
           if (!resumeResponse.success) {
             consumer.resume();
