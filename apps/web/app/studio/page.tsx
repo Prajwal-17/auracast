@@ -94,10 +94,6 @@ export default function Studio() {
         return;
       }
 
-      socket.on("message", (msg) => {
-        console.log(msg);
-      });
-
       const rtpCapabilities = await socket
         .timeout(6000)
         .emitWithAck("getRtpCapabilities", roomId);
@@ -106,7 +102,6 @@ export default function Studio() {
       device = new mediasoupClient.Device();
       await device.load({ routerRtpCapabilities: rtpCapabilities });
 
-      // --------------------------------------send transport
       const sendTransportOptions = await socket
         .timeout(6000)
         .emitWithAck("createSendTransport", roomId);
@@ -127,23 +122,19 @@ export default function Studio() {
       const sendTransportId = sendTransport.id;
       sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
-          console.log("send dtls", dtlsParameters);
           await socket.timeout(6000).emitWithAck("send-transport-connect", {
             roomId,
             sendTransportId,
             dtlsParameters,
           });
 
-          console.log("dtls done  send");
           // error check
           callback();
         } catch (error) {
           console.log(error);
         }
       });
-      // --------------------------------------send transport
 
-      // --------------------------------------recv transport
       const recvTransportOptions = await socket
         .timeout(6000)
         .emitWithAck("createRecvTransport", roomId);
@@ -160,12 +151,8 @@ export default function Studio() {
       });
 
       const recvTransportId = recvTransport.id;
-      console.log("here2");
       recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
-          console.log("here3");
-          console.log("inside in recv transport");
-          console.log("recv dtls", dtlsParameters);
           const value = await socket
             .timeout(6000)
             .emitWithAck("recv-transport-connect", {
@@ -174,17 +161,11 @@ export default function Studio() {
               dtlsParameters,
             });
 
-          console.log("value", value);
-          console.log("here4");
-          console.log("dtls done  recv");
           callback();
-          // socket.emit "get producers"  || start consuming
-          console.log("here5");
         } catch (error) {
           console.log("Error occured in recvTransport connection", error);
         }
       });
-      // --------------------------------------recv transport
 
       sendTransport.on(
         "produce",
@@ -198,7 +179,6 @@ export default function Studio() {
                 kind,
                 rtpParameters,
               });
-            console.log("producer id ", producerId);
 
             mediasoupCallback(producerId);
           } catch (error) {
@@ -221,6 +201,18 @@ export default function Studio() {
       await sendTransport.produce({ track: videoTrack });
       await sendTransport.produce({ track: audioTrack });
 
+      socket.on("new-producer", async ({ producerId, producerSocketId }) => {
+        try {
+          if (socketId === producerSocketId) {
+            return;
+          }
+
+          await consume(producerId);
+        } catch (error) {
+          console.log("Error occured in consume", error);
+        }
+      });
+
       const { allProducers } = await socket
         .timeout(7000)
         .emitWithAck("getAllProducers", {
@@ -229,7 +221,6 @@ export default function Studio() {
         });
 
       if (allProducers.length <= 0) {
-        console.log("no producers");
         return;
       }
 
@@ -257,7 +248,6 @@ export default function Studio() {
           });
 
           // check for consumer
-          console.log(consumer);
 
           const resumeResponse = await socket
             ?.timeout(8000)
@@ -276,23 +266,12 @@ export default function Studio() {
 
           if (consumer.kind === "video" && opponentRef.current) {
             const stream = new MediaStream([videoConsumer.track]);
-            console.log("track", videoConsumer.track);
-            console.log("stream", stream);
             opponentRef.current.srcObject = stream;
-            console.log("consuming");
           }
         } catch (error) {
           console.log(error);
         }
       }
-
-      socket.on("new-producer", async ({ producerId, producerSocketId }) => {
-        try {
-          await consume(producerId);
-        } catch (error) {
-          console.log("Error occured in consume", error);
-        }
-      });
     } catch (error) {
       console.error("Webrtc init failed", error);
     }

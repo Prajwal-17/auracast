@@ -6,15 +6,6 @@ import { recvTransportFnc } from "../mediasoup/recvTransport";
 
 export async function setupSocket(io: Server) {
 
-  setInterval(() => {
-    // console.log("state", mediasoupState)
-    // console.log("worker", mediasoupState.worker)
-    // console.log("routers", mediasoupState.router.keys())
-    // console.log("producers", mediasoupState.producers.keys());
-    // console.log("consumers", mediasoupState.consumers.keys());
-    // console.log("transports", mediasoupState.room.get())
-  }, 2000);
-
   io.on("connection", (socket) => {
 
     socket.on("create-room", async (roomId, callback) => {
@@ -103,7 +94,6 @@ export async function setupSocket(io: Server) {
     socket.on("createRecvTransport", async (roomId, callback) => {
       try {
         const recvTransportOptions = await recvTransportFnc(socket.id, roomId)
-        console.log("inside recv transport server", recvTransportFnc)
 
         if (!recvTransportOptions) {
           throw new Error("Failed to create WebRTC Recv transport.");
@@ -118,7 +108,6 @@ export async function setupSocket(io: Server) {
       try {
         const recvTransport = getRecvTransport(roomId, recvTransportId);
         await recvTransport?.connect({ dtlsParameters });
-        console.log("here recv connect", recvTransport)
         callback();
       } catch (error) {
         console.error("Error connecting Recv Transport", error)
@@ -174,7 +163,6 @@ export async function setupSocket(io: Server) {
       const producerIds = room?.producers.keys();
 
       if (!producerIds) {
-        console.log("no producerIds")
         return
       }
       const filteredProducers = Array.from(producerIds).filter(p => !peer?.producers.has(p))
