@@ -1,7 +1,6 @@
-import { mediasoupState } from "./mediasoupState";
-import { getRoom, getRouter } from "./utils";
+import { getRoom } from "./utils";
 
-export async function sendTransportFnc(roomId: string) {
+export async function sendTransportFnc(socketId: string, roomId: string) {
   try {
     const room = getRoom(roomId);
     const router = room?.router;
@@ -29,6 +28,14 @@ export async function sendTransportFnc(roomId: string) {
 
     const sendTransportId = sendTransport.id;
     room?.transports.set(sendTransportId, sendTransport)
+    room?.peers.set(socketId, {
+      userId: "",
+      transports: new Set(),
+      producers: new Set(),
+      consumers: new Set()
+    });
+    const peer = room?.peers.get(socketId)
+    peer?.transports.add(sendTransportId)
 
     return {
       id: sendTransportId,

@@ -1,10 +1,8 @@
 import { Server } from "socket.io";
-import { mediasoupState } from "../mediasoup/mediasoupState";
 import { getConsumer, getProducer, getRecvTransport, getRoom, getRouter, getSendTransport } from "../mediasoup/utils";
 import { createRouter } from "../mediasoup/router";
 import { sendTransportFnc } from "../mediasoup/sendTransport";
 import { recvTransportFnc } from "../mediasoup/recvTransport";
-import * as mediasoup from "mediasoup"
 
 export async function setupSocket(io: Server) {
 
@@ -14,7 +12,7 @@ export async function setupSocket(io: Server) {
     // console.log("routers", mediasoupState.router.keys())
     // console.log("producers", mediasoupState.producers.keys());
     // console.log("consumers", mediasoupState.consumers.keys());
-    // console.log("transports", mediasoupState.transports.keys())
+    // console.log("transports", mediasoupState.room.get())
   }, 2000);
 
   io.on("connection", (socket) => {
@@ -53,7 +51,7 @@ export async function setupSocket(io: Server) {
 
     socket.on("createSendTransport", async (roomId, callback) => {
       try {
-        const sendTransportData = await sendTransportFnc(roomId)
+        const sendTransportData = await sendTransportFnc(socket.id, roomId)
 
         if (!sendTransportData) {
           throw new Error("Failed to create WebRTC send transport.");
@@ -80,7 +78,7 @@ export async function setupSocket(io: Server) {
         const room = getRoom(roomId);
         const router = room?.router;
         const sendTransport = getSendTransport(roomId, sendTransportId);
-        const producer = await sendTransport?.produce({ kind, rtpParameters, appData: { routerId: router?.id } })
+        const producer = await sendTransport?.produce({ kind, rtpParameters, appData: { routerId: router?.id, socketId: socket.id } })
 
         if (!producer) {
           console.error("No producer found");
@@ -89,8 +87,10 @@ export async function setupSocket(io: Server) {
 
         const producerId = producer.id
         room?.producers.set(producerId, producer)
+        const peer = room?.peers.get(socket.id);
+        peer?.producers.add(producerId);
 
-        io.in(roomId).emit("new-producer", {
+        io.to(roomId).emit("new-producer", {
           producerId: producerId,
           producerSocketId: socket.id
         })
@@ -102,7 +102,8 @@ export async function setupSocket(io: Server) {
 
     socket.on("createRecvTransport", async (roomId, callback) => {
       try {
-        const recvTransportOptions = await recvTransportFnc(roomId)
+        const recvTransportOptions = await recvTransportFnc(socket.id, roomId)
+        console.log("inside recv transport server", recvTransportFnc)
 
         if (!recvTransportOptions) {
           throw new Error("Failed to create WebRTC Recv transport.");
@@ -117,20 +118,23 @@ export async function setupSocket(io: Server) {
       try {
         const recvTransport = getRecvTransport(roomId, recvTransportId);
         await recvTransport?.connect({ dtlsParameters });
+        console.log("here recv connect", recvTransport)
         callback();
       } catch (error) {
         console.error("Error connecting Recv Transport", error)
+        callback();
       }
     })
 
-    socket.on("transport-consume", async ({ roomId, recvTransportId, producerId, rtpCapabilities }, callback) => {
+    socket.on("transport-consume", async ({ roomId, recvTransportId, producerId, producerSocketId, rtpCapabilities }, callback) => {
       try {
         const room = getRoom(roomId);
         const router = room?.router;
         const recvTransport = getRecvTransport(roomId, recvTransportId)
+        const peer = room?.peers.get(socket.id);
 
         if (!router?.canConsume({ producerId, rtpCapabilities })) {
-          console.error("The router cannont consume");
+          console.log("cannot consume")
           return;
         }
 
@@ -138,7 +142,7 @@ export async function setupSocket(io: Server) {
           producerId,
           rtpCapabilities,
           paused: true
-        });
+        })
 
         if (!consumer) {
           console.error("Consumer cannot be created")
@@ -147,10 +151,15 @@ export async function setupSocket(io: Server) {
 
         const consumerId = consumer.id;
         room?.consumers.set(consumerId, consumer)
+        const peerConsumersSet = room?.peerConsumers.get(socket.id) ?? new Set();
+        if (!room?.peerConsumers.has(socket.id)) {
+          room?.peerConsumers.set(socket.id, peerConsumersSet)
+        }
+        peerConsumersSet.add(producerId)
 
         callback({
           id: consumerId,
-          producerId,
+          producerId: producerId,
           kind: consumer.kind,
           rtpParameters: consumer.rtpParameters
         });
@@ -158,6 +167,19 @@ export async function setupSocket(io: Server) {
         console.error("Error in transport consume event", error)
       }
     });
+
+    socket.on("getAllProducers", async ({ roomId, socketId }, callback) => {
+      const room = getRoom(roomId);
+      const peer = room?.peers.get(socketId)
+      const producerIds = room?.producers.keys();
+
+      if (!producerIds) {
+        console.log("no producerIds")
+        return
+      }
+      const filteredProducers = Array.from(producerIds).filter(p => !peer?.producers.has(p))
+      callback({ allProducers: filteredProducers })
+    })
 
     socket.on("consumer-resume", async ({ roomId, consumerId }, callback) => {
       const consumer = getConsumer(roomId, consumerId);

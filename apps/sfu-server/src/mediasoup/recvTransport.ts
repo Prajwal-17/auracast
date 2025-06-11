@@ -1,7 +1,6 @@
-import { mediasoupState } from "./mediasoupState";
-import { getRoom, getRouter } from "./utils";
+import { getRoom } from "./utils";
 
-export async function recvTransportFnc(roomId: string) {
+export async function recvTransportFnc(socketId: string, roomId: string) {
   try {
     const room = getRoom(roomId)
     const router = room?.router;
@@ -29,6 +28,8 @@ export async function recvTransportFnc(roomId: string) {
 
     const recvTransportId = recvTransport.id;
     room?.transports.set(recvTransportId, recvTransport);
+    const peer = room?.peers.get(socketId);
+    peer?.transports.add(recvTransportId);
 
     return {
       id: recvTransportId,

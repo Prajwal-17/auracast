@@ -12,12 +12,6 @@ import {
 } from "@/lib/socket/socket";
 import { useMediasoupStore } from "@/store/mediasoupStore";
 
-type TransportType = {
-  id: string;
-  socketId: string;
-  type: string;
-};
-
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
   const myVideoRef = useRef<HTMLVideoElement>(null);
@@ -69,7 +63,6 @@ export default function Studio() {
 
       const newRoomId = short().generate();
       setRoomId(newRoomId);
-      console.log("fe roomid", roomId);
       await socket.timeout(6000).emitWithAck("create-room", newRoomId);
       startCall(newRoomId);
     } catch (error) {
@@ -101,15 +94,19 @@ export default function Studio() {
         return;
       }
 
+      socket.on("message", (msg) => {
+        console.log(msg);
+      });
+
       const rtpCapabilities = await socket
         .timeout(6000)
         .emitWithAck("getRtpCapabilities", roomId);
 
       // check rtp cap
-
       device = new mediasoupClient.Device();
       await device.load({ routerRtpCapabilities: rtpCapabilities });
 
+      // --------------------------------------send transport
       const sendTransportOptions = await socket
         .timeout(6000)
         .emitWithAck("createSendTransport", roomId);
@@ -130,19 +127,64 @@ export default function Studio() {
       const sendTransportId = sendTransport.id;
       sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
+          console.log("send dtls", dtlsParameters);
           await socket.timeout(6000).emitWithAck("send-transport-connect", {
             roomId,
             sendTransportId,
             dtlsParameters,
           });
 
+          console.log("dtls done  send");
           // error check
-
           callback();
         } catch (error) {
           console.log(error);
         }
       });
+      // --------------------------------------send transport
+
+      // --------------------------------------recv transport
+      const recvTransportOptions = await socket
+        .timeout(6000)
+        .emitWithAck("createRecvTransport", roomId);
+
+      recvTransport = device.createRecvTransport({
+        ...recvTransportOptions,
+        iceServers: [
+          {
+            urls:
+              process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
+              "stun:stun.l.google.com:19302",
+          },
+        ],
+      });
+
+      const recvTransportId = recvTransport.id;
+      console.log("here2");
+      recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
+        try {
+          console.log("here3");
+          console.log("inside in recv transport");
+          console.log("recv dtls", dtlsParameters);
+          const value = await socket
+            .timeout(6000)
+            .emitWithAck("recv-transport-connect", {
+              roomId,
+              recvTransportId,
+              dtlsParameters,
+            });
+
+          console.log("value", value);
+          console.log("here4");
+          console.log("dtls done  recv");
+          callback();
+          // socket.emit "get producers"  || start consuming
+          console.log("here5");
+        } catch (error) {
+          console.log("Error occured in recvTransport connection", error);
+        }
+      });
+      // --------------------------------------recv transport
 
       sendTransport.on(
         "produce",
@@ -179,68 +221,46 @@ export default function Studio() {
       await sendTransport.produce({ track: videoTrack });
       await sendTransport.produce({ track: audioTrack });
 
-      // create recv transrpot
+      const { allProducers } = await socket
+        .timeout(7000)
+        .emitWithAck("getAllProducers", {
+          roomId,
+          socketId,
+        });
 
-      const recvTransportOptions = await socket
-        .timeout(6000)
-        .emitWithAck("createRecvTransport", roomId);
+      if (allProducers.length <= 0) {
+        console.log("no producers");
+        return;
+      }
 
-      recvTransport = device.createRecvTransport({
-        ...recvTransportOptions,
-        iceServers: [
-          {
-            urls:
-              process.env.NEXT_PUBLIC_STUN_SERVER_URL ||
-              "stun:stun.l.google.com:19302",
-          },
-        ],
-      });
+      for (const prod of allProducers) {
+        await consume(prod);
+      }
 
-      const recvTransportId = recvTransport.id;
-      recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
+      async function consume(prod: string) {
         try {
-          await socket.timeout(6000).emitWithAck("recv-transport-connect", {
-            roomId,
-            recvTransportId,
-            dtlsParameters,
-          });
-
-          callback();
-        } catch (error) {
-          console.log("Error occured in recvTransport connection", error);
-        }
-      });
-
-      socket.on("new-producer", async ({ producerId, producerSocketId }) => {
-        try {
-          if (producerSocketId === socketId) {
-            return;
-          }
-          // console.log("prod id ", producerId);
-          // console.log("sock id ", producerSocketId);
-
-          const recvTransportId = recvTransport.id;
-
           const consumerData = await socket
-            .timeout(10000)
+            ?.timeout(10000)
             .emitWithAck("transport-consume", {
               roomId,
               recvTransportId,
-              producerId,
+              producerId: prod,
+              producerSocketId: socketId,
               rtpCapabilities: device.rtpCapabilities,
             });
 
           const consumer = await recvTransport.consume({
-            producerId: consumerData.producerId,
             id: consumerData.id,
+            producerId: consumerData.producerId,
             kind: consumerData.kind,
             rtpParameters: consumerData.rtpParameters,
           });
 
           // check for consumer
+          console.log(consumer);
 
           const resumeResponse = await socket
-            .timeout(6000)
+            ?.timeout(8000)
             .emitWithAck("consumer-resume", {
               roomId: roomId,
               consumerId: consumer.id,
@@ -261,6 +281,14 @@ export default function Studio() {
             opponentRef.current.srcObject = stream;
             console.log("consuming");
           }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      socket.on("new-producer", async ({ producerId, producerSocketId }) => {
+        try {
+          await consume(producerId);
         } catch (error) {
           console.log("Error occured in consume", error);
         }

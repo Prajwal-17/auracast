@@ -44,10 +44,12 @@ export async function createRouter(roomId: string) {
     const workerId = `${worker?.pid}`
     mediasoupState.room.set(roomId, {
       workerRef: workerId,
+      peers: new Map(),
       router,
       transports: new Map(),
       producers: new Map(),
-      consumers: new Map()
+      consumers: new Map(),
+      peerConsumers: new Map()
     })
 
     return router
