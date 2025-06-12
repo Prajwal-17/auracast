@@ -1,6 +1,6 @@
 ### Mediasoup State Architecture (server)
 
-```json
+```yaml
 {
   "worker": "workerObject",
   "room" => {
