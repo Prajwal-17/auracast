@@ -7,7 +7,7 @@ export type RoomStateType = {
   transports: Map<string, mediasoup.types.WebRtcTransport>,
   producers: Map<string, mediasoup.types.Producer>,
   consumers: Map<string, mediasoup.types.Consumer>,
-  peerConsumers: Map<string, Set<string>>,                         // <socketId, ["producerIds"]>
+  peerConsumers: Map<string, Set<string>>,
 }
 
 export type PeerType = {
