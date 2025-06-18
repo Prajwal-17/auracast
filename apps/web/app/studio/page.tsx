@@ -11,12 +11,27 @@ import {
   socketInstance,
 } from "@/lib/socket/socket";
 import { useMediasoupStore } from "@/store/mediasoupStore";
+// import { getServerSession } from "next-auth";
+import { getSession } from "next-auth/react";
+import { auth, authOptions } from "@/lib/auth";
 
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
   const myVideoRef = useRef<HTMLVideoElement>(null);
   const opponentRef = useRef<HTMLVideoElement>(null);
   // const roomIdRef = useRef<string>(null);
+  useEffect(() => {
+    async function sess() {
+      try {
+        // const session = await auth();
+        // console.log("session", session);
+      } catch (error) {
+        console.log("error", error);
+      }
+    }
+
+    sess();
+  }, []);
 
   const socketId = useMediasoupStore((state) => state.socketId);
   const setSocketId = useMediasoupStore((state) => state.setSocketId);

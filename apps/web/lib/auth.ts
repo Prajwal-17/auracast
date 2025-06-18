@@ -59,6 +59,9 @@ export const config: NextAuthConfig = {
   pages: {
     signIn: "/auth/signin",
   },
+  session: {
+    strategy: "jwt"
+  },
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
       if (account?.provider !== "credentials") return true;
@@ -68,11 +71,12 @@ export const config: NextAuthConfig = {
     jwt: ({ token, user, account }) => {
       if (account) {
         token.accessToken = account.access_token;
-        token.refreshToken = account.access_token;
+        // token.refreshToken = account.access_token;
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
       }
+      console.log("token", token)
       return token
     },
     session: ({ token, session }) => {
@@ -84,7 +88,7 @@ export const config: NextAuthConfig = {
           email: token.email as string
         }
         session.accessToken = token.accessToken as string
-        session.refreshToken = token.refreshToken as string
+        // session.refreshToken = token.refreshToken as string
       }
       return session
     }
