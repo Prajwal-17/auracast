@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import Google from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import prisma from "./db"
+import { prisma } from "@repo/db/prisma"
 
 export const config: NextAuthConfig = {
   secret: process.env.AUTH_SECRET as string,

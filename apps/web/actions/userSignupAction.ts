@@ -1,6 +1,6 @@
 "use server"
 
-import prisma from "@/lib/db"
+import { prisma } from "@repo/db/prisma";
 import bcrypt from "bcryptjs";
 
 export async function userSignupAction(name: string, email: string, password: string) {
