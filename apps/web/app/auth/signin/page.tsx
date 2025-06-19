@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 
 export default function Signin() {
@@ -12,12 +11,6 @@ export default function Signin() {
 
   async function handleSignin() {
     try {
-      await signIn("credentials", {
-        redirect: true,
-        callbackUrl: "/",
-        email: email,
-        password: password,
-      });
     } catch (error) {
       console.log(error);
     }
@@ -25,10 +18,6 @@ export default function Signin() {
 
   async function handleGoogleSignin() {
     try {
-      await signIn("google", {
-        redirect: true,
-        callbackUrl: "/",
-      });
     } catch (error) {
       console.log(error);
     }
