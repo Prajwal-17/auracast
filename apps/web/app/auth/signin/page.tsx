@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
 export default function Signin() {
@@ -11,6 +12,12 @@ export default function Signin() {
 
   async function handleSignin() {
     try {
+      const { data, error } = await authClient.signIn.email({
+        email: email,
+        password: password,
+      });
+
+      console.log(data, error);
     } catch (error) {
       console.log(error);
     }
@@ -18,6 +25,10 @@ export default function Signin() {
 
   async function handleGoogleSignin() {
     try {
+      const data = await authClient.signIn.social({
+        provider: "google",
+      });
+      console.log(data);
     } catch (error) {
       console.log(error);
     }

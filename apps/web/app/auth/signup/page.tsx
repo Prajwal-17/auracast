@@ -1,9 +1,9 @@
 "use client";
 
-import { userSignupAction } from "@/actions/userSignupAction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
 export default function Signup() {
@@ -13,8 +13,13 @@ export default function Signup() {
 
   async function handleSignup() {
     try {
-      const response = await userSignupAction(name, email, password);
-      console.log(response);
+      const { data, error } = await authClient.signUp.email({
+        email: email,
+        password: password,
+        name: name,
+      });
+
+      console.log(data, error);
     } catch (error) {
       console.log(error);
     }
