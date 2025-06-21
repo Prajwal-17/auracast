@@ -8,7 +8,7 @@
       "worker": "workerReference",
       "router": "routerObject",
       "peers" => { // contains all the peer data
-        "peerId1": {
+        "peerId1": {    // peerId = socket.id
           "userId": "string",
           "transports": ["transportId1", "transportId2"],
           "producers": ["producerId1", "producerId2"],
@@ -28,6 +28,7 @@
         "consumerId1": "consumerObject"
       },
       "peerConsumers" => {
+        // peerId = socket.id
         "peerId1": ["producerIdA", "producerIdB"] // contains producerIds which the peer has consumed
       }
     },

@@ -330,7 +330,7 @@ export default function Studio() {
           </div>
           <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
           <Button onClick={() => createRoom()} className="my-4">
-            authenticate
+            Create Room
           </Button>
           {roomId && <div>{roomId}</div>}
           {roomId && <div>{roomId}</div>}

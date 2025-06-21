@@ -5,6 +5,7 @@ import { sendTransportFnc } from "../mediasoup/sendTransport";
 import { recvTransportFnc } from "../mediasoup/recvTransport";
 import { auth } from "@repo/auth/auth";
 import { fromNodeHeaders } from "better-auth/node";
+import { mediasoupState } from "../mediasoup/mediasoupState";
 
 export async function setupSocket(io: Server) {
 
@@ -14,6 +15,7 @@ export async function setupSocket(io: Server) {
       try {
         await socket.join(roomId)
         await createRouter(roomId)
+        socket.data.roomId = roomId;
         callback()
       } catch (error) {
         console.error("Error joining room", error)
@@ -23,6 +25,7 @@ export async function setupSocket(io: Server) {
     socket.on("join-room", async (roomId, callback) => {
       try {
         await socket.join(roomId)
+        socket.data.roomId = roomId;
         callback()
       } catch (error) {
         console.error("Error joining room", error)
@@ -44,7 +47,8 @@ export async function setupSocket(io: Server) {
 
     socket.on("createSendTransport", async (roomId, callback) => {
       try {
-        const sendTransportData = await sendTransportFnc(socket.id, roomId)
+        const userId = socket.data.session.user.id
+        const sendTransportData = await sendTransportFnc(socket.id, roomId, userId)
 
         if (!sendTransportData) {
           throw new Error("Failed to create WebRTC send transport.");
@@ -142,6 +146,7 @@ export async function setupSocket(io: Server) {
 
         const consumerId = consumer.id;
         room?.consumers.set(consumerId, consumer)
+        room?.peers.get(socket.id)?.consumers.add(consumerId)
         const peerConsumersSet = room?.peerConsumers.get(socket.id) ?? new Set();
         if (!room?.peerConsumers.has(socket.id)) {
           room?.peerConsumers.set(socket.id, peerConsumersSet)
@@ -181,8 +186,73 @@ export async function setupSocket(io: Server) {
 
     socket.on("disconnect", () => {
       console.log("User Disconnected:", socket.id);
-    });
 
+      disconnectCleanup()
+
+      async function disconnectCleanup() {
+        try {
+          const roomId = socket.data.roomId;
+          if (!roomId) {
+            console.log("No room id")
+          }
+
+          const room = mediasoupState.room.get(roomId)
+          if (!room) {
+            console.log("Room does not exist")
+            return
+          }
+
+          const peer = room.peers.get(socket.id)
+          if (!peer) {
+            console.log("no peer exists")
+            return
+          }
+
+          const transportKeys = [...peer.transports]
+          const producerKeys = [...peer.producers]
+          const consumerKeys = [...peer.consumers]
+
+          transportKeys.forEach((id) => {
+            const transport = room.transports.get(id);
+            if (transport) {
+              transport?.close();
+              room.transports.delete(transport.id)
+            }
+          })
+
+          producerKeys.forEach((id) => {
+            const producer = room.producers.get(id);
+            if (producer) {
+              producer?.close();
+              room.producers.delete(producer.id)
+            }
+          })
+
+          consumerKeys.forEach((id) => {
+            const consumer = room.consumers.get(id);
+            if (consumer) {
+              consumer?.close();
+              room.consumers.delete(consumer.id)
+            }
+          })
+
+          room.peerConsumers.delete(socket.id)
+
+          room.peers.delete(socket.id)
+
+          const shouldCloseRoom =
+            room.producers.size === 0 &&
+            room.consumers.size === 0;
+
+          if (shouldCloseRoom) {
+            room.router.close();
+            mediasoupState.room.delete(roomId)
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    });
   });
 
   // socket.io middleware run for every incoming connection 

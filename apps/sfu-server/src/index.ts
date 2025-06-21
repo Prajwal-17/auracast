@@ -10,6 +10,7 @@ import { worker } from "./mediasoup/worker";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { auth } from "@repo/auth/auth";
 import { isAuthenticated } from "./middleware/isAuthenticated"
+import { mediasoupState } from "./mediasoup/mediasoupState"
 
 dotenv.config()
 

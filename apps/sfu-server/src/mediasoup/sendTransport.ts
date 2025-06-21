@@ -1,6 +1,6 @@
 import { getRoom } from "./utils";
 
-export async function sendTransportFnc(socketId: string, roomId: string) {
+export async function sendTransportFnc(socketId: string, roomId: string, userId: string) {
   try {
     const room = getRoom(roomId);
     const router = room?.router;
@@ -28,8 +28,11 @@ export async function sendTransportFnc(socketId: string, roomId: string) {
 
     const sendTransportId = sendTransport.id;
     room?.transports.set(sendTransportId, sendTransport)
+
+
+
     room?.peers.set(socketId, {
-      userId: "",
+      userId: userId,
       transports: new Set(),
       producers: new Set(),
       consumers: new Set()
