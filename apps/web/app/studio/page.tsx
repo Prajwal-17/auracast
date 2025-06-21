@@ -11,7 +11,6 @@ import {
   socketInstance,
 } from "@/lib/socket/socket";
 import { useMediasoupStore } from "@/store/mediasoupStore";
-import { authClient } from "@/lib/auth-client";
 
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
@@ -52,23 +51,6 @@ export default function Studio() {
       disconnectSocket();
     };
   }, []);
-
-  async function authenticate() {
-    try {
-      // const { data: session } = await authClient.getSession();
-      // console.log("session",session);
-      console.log("inside");
-      const response = await fetch("http://localhost:3001/health", {
-        method: "GET",
-        credentials: "include",
-      });
-      const responsedata = await response.json();
-
-      console.log(responsedata);
-    } catch (error) {
-      console.log(error);
-    }
-  }
 
   async function createRoom() {
     try {
@@ -347,7 +329,7 @@ export default function Studio() {
             />
           </div>
           <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
-          <Button onClick={authenticate} className="my-4">
+          <Button onClick={() => createRoom()} className="my-4">
             authenticate
           </Button>
           {roomId && <div>{roomId}</div>}

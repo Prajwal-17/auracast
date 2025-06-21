@@ -10,6 +10,7 @@ if (!webSocketUrl) {
 
 export const socketInstance: Socket = io(webSocketUrl, {
   autoConnect: false,
+  withCredentials: true,
 });
 
 export function connectSocket() {
