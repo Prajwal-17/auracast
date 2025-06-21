@@ -1,0 +1,10 @@
+{
+  "extends":"@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "incremental": true,
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "esModuleInterop": true
+  }
+}

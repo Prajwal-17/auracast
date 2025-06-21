@@ -3,6 +3,8 @@ import { getConsumer, getProducer, getRecvTransport, getRoom, getRouter, getSend
 import { createRouter } from "../mediasoup/router";
 import { sendTransportFnc } from "../mediasoup/sendTransport";
 import { recvTransportFnc } from "../mediasoup/recvTransport";
+import { auth } from "@repo/auth/auth";
+import { fromNodeHeaders } from "better-auth/node";
 
 export async function setupSocket(io: Server) {
 
@@ -182,4 +184,31 @@ export async function setupSocket(io: Server) {
     });
 
   });
+
+  // socket.io middleware run for every incoming connection 
+  io.use((socket, next) => {
+    async function authenticate() {
+      try {
+        if (socket.data.session) {
+          return next()
+        }
+
+        const session = await auth.api.getSession({
+          headers: fromNodeHeaders(socket.handshake.headers)
+        });
+
+        if (!session || session === null) {
+          return next(new Error("Invalid Session: Disconnected"))
+        }
+
+        socket.data.session = session
+        next()
+      } catch (error) {
+        console.log("Auth error", error)
+        next(new Error("Unauthorized"));
+      }
+    }
+
+    authenticate()
+  })
 }
