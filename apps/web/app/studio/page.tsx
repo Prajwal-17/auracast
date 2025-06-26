@@ -11,22 +11,44 @@ import {
   socketInstance,
 } from "@/lib/socket/socket";
 import { useMediasoupStore } from "@/store/mediasoupStore";
+import { RemoteVideo } from "@/components/RemoteVideo";
 
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
   const myVideoRef = useRef<HTMLVideoElement>(null);
-  const opponentRef = useRef<HTMLVideoElement>(null);
+  // const opponentRef = useRef<HTMLVideoElement>(null);
   // const roomIdRef = useRef<string>(null);
+
+  // const remotePeersRef = useRef(new Map());
 
   const socketId = useMediasoupStore((state) => state.socketId);
   const setSocketId = useMediasoupStore((state) => state.setSocketId);
 
   const [roomId, setRoomId] = useState("");
+  // const [remotePeers, setRemotePeers] = useState<MediaStream[] | []>([]);
+
+  // state to store all remote streams
+  const [remoteStreams, setRemoteStreams] = useState<
+    { socketId: string; stream: MediaStream }[]
+  >([]);
+
+  const remoteStreamRef = useRef<Map<string, MediaStream>>(new Map());
+
+  // const remoteStreamTracks = new Map();
+  // ref to store all video tracks refs
 
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
   let recvTransport: mediasoupClient.types.Transport;
   let videoConsumer: mediasoupClient.types.Consumer;
+  let audioConsumer: mediasoupClient.types.Consumer;
+  useEffect(() => {
+    console.log("remote streams state", remoteStreams);
+  }, [remoteStreams]);
+
+  useEffect(() => {
+    console.log("socketid", socketId);
+  }, [socketId]);
 
   // add auth check in socket
   useEffect(() => {
@@ -187,17 +209,17 @@ export default function Studio() {
         },
       );
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const myStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
 
       if (myVideoRef.current) {
-        myVideoRef.current.srcObject = stream;
+        myVideoRef.current.srcObject = myStream;
       }
 
-      const videoTrack = stream.getVideoTracks()[0];
-      const audioTrack = stream.getAudioTracks()[0];
+      const videoTrack = myStream.getVideoTracks()[0];
+      const audioTrack = myStream.getAudioTracks()[0];
       await sendTransport.produce({ track: videoTrack });
       await sendTransport.produce({ track: audioTrack });
 
@@ -213,30 +235,31 @@ export default function Studio() {
         }
       });
 
-      const { allProducers } = await socket
-        .timeout(7000)
-        .emitWithAck("getAllProducers", {
-          roomId,
-          socketId,
-        });
+      const value = await socket.timeout(7000).emitWithAck("getAllProducers", {
+        roomId,
+        socketId,
+      });
 
-      if (allProducers.length <= 0) {
+      console.log("prd sock id ", value.producerSocketId);
+      if (value.allProducers.length <= 0) {
         return;
       }
 
-      for (const prod of allProducers) {
-        await consume(prod);
+      for (const prodId of value.allProducers) {
+        // console.log("allproducers", allProducers);
+        await consume(prodId);
       }
 
-      async function consume(prod: string) {
+      async function consume(prodId: string) {
+        console.log("consumer created");
         try {
           const consumerData = await socket
             ?.timeout(10000)
             .emitWithAck("transport-consume", {
               roomId,
               recvTransportId,
-              producerId: prod,
-              producerSocketId: socketId,
+              producerId: prodId,
+              // producerSocketId: producerSocketId,
               rtpCapabilities: device.rtpCapabilities,
             });
 
@@ -256,18 +279,49 @@ export default function Studio() {
               consumerId: consumer.id,
             });
 
-          if (!resumeResponse.success) {
+          if (resumeResponse.success) {
             consumer.resume();
           }
 
-          if (consumer.kind === "video") {
-            videoConsumer = consumer;
+          // const remoteSocketId = consumerData.socketId;
+          // console.log("remotesocketId", remoteSocketId);
+          // console.log("producersocket id", valueproducerSocketId);
+
+          let stream = remoteStreamRef.current.get(value.producerSocketId);
+
+          if (!stream) {
+            stream = new MediaStream();
+            remoteStreamRef.current.set(value.producerSocketId, stream);
           }
 
-          if (consumer.kind === "video" && opponentRef.current) {
-            const stream = new MediaStream([videoConsumer.track]);
-            opponentRef.current.srcObject = stream;
+          const existingTracks = stream
+            .getTracks()
+            .find((t) => t.id === consumer.track.id);
+
+          if (!existingTracks) {
+            stream.addTrack(consumer.track);
           }
+          console.log("after adding ", stream.getTracks());
+
+          setRemoteStreams((prev) => {
+            const existing = prev.find(
+              (item) => item.socketId === value.producerSocketId,
+            );
+
+            if (existing) {
+              // return prev.map((p) =>
+              //   p.socketId === remoteSocketId
+              //     ? { socketId: remoteSocketId, stream: stream }
+              //     : p,
+              // );
+              return [...prev];
+            } else {
+              return [
+                ...prev,
+                { socketId: value.producerSocketId, stream: stream },
+              ];
+            }
+          });
         } catch (error) {
           console.log(error);
         }
@@ -301,22 +355,22 @@ export default function Studio() {
           </div>
         </div>
         <div>
-          <video
-            ref={opponentRef}
-            muted
-            autoPlay
-            playsInline
-            style={{
-              width: "300px",
-              margin: "5px",
-              height: "auto",
-              transform: "scaleX(-1)", // Mirror effect
-              display: "block",
-            }}
-          />
-          <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
-            Opponent Video
-          </div>
+          {/* {remoteStreams.map(({ socketId, stream }, idx) => (
+            <RemoteVideo key={idx} socketId={socketId} stream={stream} />
+          ))} */}
+          {remoteStreams.map(({ socketId, stream }, index) => (
+            <div key={index}>
+              <h4>User: {socketId}</h4>
+              <p>Tracks: {stream.getTracks().length}</p>
+              <ul>
+                {stream.getTracks().map((track) => (
+                  <li key={track.id}>
+                    {track.kind} - {track.id} - {track.readyState}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div>

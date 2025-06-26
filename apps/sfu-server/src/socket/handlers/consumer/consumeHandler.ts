@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 import { getRecvTransport, getRoom } from "../../../mediasoup/utils";
 
 export default function consumeHandler(socket: Socket) {
-  socket.on("transport-consume", async ({ roomId, recvTransportId, producerId, producerSocketId, rtpCapabilities }, callback) => {
+  socket.on("transport-consume", async ({ roomId, recvTransportId, producerId, rtpCapabilities }, callback) => {
     try {
       const room = getRoom(roomId);
       const router = room?.router;
@@ -33,12 +33,17 @@ export default function consumeHandler(socket: Socket) {
         room?.peerConsumers.set(socket.id, peerConsumersSet)
       }
       peerConsumersSet.add(producerId)
+      console.log("socketid", socket.id)
+      // console.log("prod socketid", producerSocketId)
 
+      const socketId = socket.id;
       callback({
         id: consumerId,
         producerId: producerId,
         kind: consumer.kind,
-        rtpParameters: consumer.rtpParameters
+        rtpParameters: consumer.rtpParameters,
+        // producerSocketId: producerSocketId,
+        socketId: socketId
       });
     } catch (error) {
       console.error("Error in transport consume event", error)
