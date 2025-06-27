@@ -11,39 +11,11 @@ export const RemoteVideo = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-
-    // Cleanup previous stream
-    const previousStream = videoElement.srcObject as MediaStream;
-    if (previousStream) {
-      previousStream.getTracks().forEach((track) => {
-        // Don't stop the track, just remove from this video element
-        if (stream.getTracks().includes(track)) return;
-        track.stop();
-      });
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    } else {
+      console.log("no ref");
     }
-
-    // Set new stream
-    videoElement.srcObject = stream;
-
-    // Handle track additions/removals
-    const handleTrackAdd = (event: MediaStreamTrackEvent) => {
-      console.log("Track added:", event.track.kind);
-    };
-
-    const handleTrackRemove = (event: MediaStreamTrackEvent) => {
-      console.log("Track removed:", event.track.kind);
-    };
-
-    stream.addEventListener("addtrack", handleTrackAdd);
-    stream.addEventListener("removetrack", handleTrackRemove);
-
-    return () => {
-      stream.removeEventListener("addtrack", handleTrackAdd);
-      stream.removeEventListener("removetrack", handleTrackRemove);
-      // Don't stop tracks here - let the parent component manage that
-    };
   }, [stream]);
 
   return (
@@ -59,7 +31,7 @@ export const RemoteVideo = ({
           height: "auto",
           transform: "scaleX(-1)",
           display: "block",
-          backgroundColor: "black", // Helps identify empty video
+          backgroundColor: "black",
         }}
       />
       <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">

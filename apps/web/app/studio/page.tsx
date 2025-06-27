@@ -16,39 +16,19 @@ import { RemoteVideo } from "@/components/RemoteVideo";
 export default function Studio() {
   const socketRef = useRef<Socket | null>(null);
   const myVideoRef = useRef<HTMLVideoElement>(null);
-  // const opponentRef = useRef<HTMLVideoElement>(null);
-  // const roomIdRef = useRef<string>(null);
-
-  // const remotePeersRef = useRef(new Map());
-
   const socketId = useMediasoupStore((state) => state.socketId);
   const setSocketId = useMediasoupStore((state) => state.setSocketId);
-
   const [roomId, setRoomId] = useState("");
-  // const [remotePeers, setRemotePeers] = useState<MediaStream[] | []>([]);
 
-  // state to store all remote streams
   const [remoteStreams, setRemoteStreams] = useState<
     { socketId: string; stream: MediaStream }[]
   >([]);
 
   const remoteStreamRef = useRef<Map<string, MediaStream>>(new Map());
 
-  // const remoteStreamTracks = new Map();
-  // ref to store all video tracks refs
-
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
   let recvTransport: mediasoupClient.types.Transport;
-  let videoConsumer: mediasoupClient.types.Consumer;
-  let audioConsumer: mediasoupClient.types.Consumer;
-  useEffect(() => {
-    console.log("remote streams state", remoteStreams);
-  }, [remoteStreams]);
-
-  useEffect(() => {
-    console.log("socketid", socketId);
-  }, [socketId]);
 
   // add auth check in socket
   useEffect(() => {
@@ -175,13 +155,11 @@ export default function Studio() {
       const recvTransportId = recvTransport.id;
       recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
         try {
-          const value = await socket
-            .timeout(6000)
-            .emitWithAck("recv-transport-connect", {
-              roomId,
-              recvTransportId,
-              dtlsParameters,
-            });
+          await socket.timeout(6000).emitWithAck("recv-transport-connect", {
+            roomId,
+            recvTransportId,
+            dtlsParameters,
+          });
 
           callback();
         } catch (error) {
@@ -229,37 +207,38 @@ export default function Studio() {
             return;
           }
 
-          await consume(producerId);
+          await consume({ producerId, producerSocketId });
         } catch (error) {
           console.log("Error occured in consume", error);
         }
       });
 
-      const value = await socket.timeout(7000).emitWithAck("getAllProducers", {
-        roomId,
-        socketId,
-      });
+      const { allProducers } = await socket
+        .timeout(10000)
+        .emitWithAck("getAllProducers", {
+          roomId,
+          socketId,
+        });
 
-      console.log("prd sock id ", value.producerSocketId);
-      if (value.allProducers.length <= 0) {
+      if (allProducers.length <= 0) {
         return;
       }
 
-      for (const prodId of value.allProducers) {
-        // console.log("allproducers", allProducers);
-        await consume(prodId);
+      for (const producerObj of allProducers) {
+        await consume(producerObj);
       }
 
-      async function consume(prodId: string) {
-        console.log("consumer created");
+      async function consume(producerObj: {
+        producerId: string;
+        producerSocketId: string;
+      }) {
         try {
           const consumerData = await socket
-            ?.timeout(10000)
+            ?.timeout(13000)
             .emitWithAck("transport-consume", {
               roomId,
               recvTransportId,
-              producerId: prodId,
-              // producerSocketId: producerSocketId,
+              producerId: producerObj.producerId,
               rtpCapabilities: device.rtpCapabilities,
             });
 
@@ -273,7 +252,7 @@ export default function Studio() {
           // check for consumer
 
           const resumeResponse = await socket
-            ?.timeout(8000)
+            ?.timeout(13000)
             .emitWithAck("consumer-resume", {
               roomId: roomId,
               consumerId: consumer.id,
@@ -283,15 +262,13 @@ export default function Studio() {
             consumer.resume();
           }
 
-          // const remoteSocketId = consumerData.socketId;
-          // console.log("remotesocketId", remoteSocketId);
-          // console.log("producersocket id", valueproducerSocketId);
-
-          let stream = remoteStreamRef.current.get(value.producerSocketId);
+          let stream = remoteStreamRef.current.get(
+            producerObj.producerSocketId,
+          );
 
           if (!stream) {
             stream = new MediaStream();
-            remoteStreamRef.current.set(value.producerSocketId, stream);
+            remoteStreamRef.current.set(producerObj.producerSocketId, stream);
           }
 
           const existingTracks = stream
@@ -301,24 +278,18 @@ export default function Studio() {
           if (!existingTracks) {
             stream.addTrack(consumer.track);
           }
-          console.log("after adding ", stream.getTracks());
 
           setRemoteStreams((prev) => {
             const existing = prev.find(
-              (item) => item.socketId === value.producerSocketId,
+              (item) => item.socketId === producerObj.producerSocketId,
             );
 
             if (existing) {
-              // return prev.map((p) =>
-              //   p.socketId === remoteSocketId
-              //     ? { socketId: remoteSocketId, stream: stream }
-              //     : p,
-              // );
               return [...prev];
             } else {
               return [
                 ...prev,
-                { socketId: value.producerSocketId, stream: stream },
+                { socketId: producerObj.producerSocketId, stream: stream },
               ];
             }
           });
@@ -335,7 +306,6 @@ export default function Studio() {
     <>
       <div>
         <div>Welcome to studio</div>
-        {/* <Button onClick={startCall}>Start Call</Button> */}
         <div>
           <video
             ref={myVideoRef}
@@ -355,21 +325,8 @@ export default function Studio() {
           </div>
         </div>
         <div>
-          {/* {remoteStreams.map(({ socketId, stream }, idx) => (
+          {remoteStreams.map(({ socketId, stream }, idx) => (
             <RemoteVideo key={idx} socketId={socketId} stream={stream} />
-          ))} */}
-          {remoteStreams.map(({ socketId, stream }, index) => (
-            <div key={index}>
-              <h4>User: {socketId}</h4>
-              <p>Tracks: {stream.getTracks().length}</p>
-              <ul>
-                {stream.getTracks().map((track) => (
-                  <li key={track.id}>
-                    {track.kind} - {track.id} - {track.readyState}
-                  </li>
-                ))}
-              </ul>
-            </div>
           ))}
         </div>
 

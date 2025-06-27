@@ -10,8 +10,18 @@ export default function getAllProducers(socket: Socket) {
     if (!producerIds) {
       return
     }
-    console.log('sock.id ', socket.id)
-    const filteredProducers = Array.from(producerIds).filter(p => !peer?.producers.has(p))
-    callback({ allProducers: filteredProducers, producerSocketId: socket.id })
+    const filteredProducerIds = Array.from(producerIds).filter(p => !peer?.producers.has(p))
+
+    let filteredProducers: { producerId: string, producerSocketId: string }[] = []
+
+    Array.from(filteredProducerIds).forEach((producerId) => {
+      const producer = room?.producers.get(producerId);
+      filteredProducers.push({
+        producerId: producerId,
+        producerSocketId: producer?.appData.socketId as string,
+      })
+    })
+
+    callback({ allProducers: filteredProducers })
   })
 }

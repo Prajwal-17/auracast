@@ -33,8 +33,6 @@ export default function consumeHandler(socket: Socket) {
         room?.peerConsumers.set(socket.id, peerConsumersSet)
       }
       peerConsumersSet.add(producerId)
-      console.log("socketid", socket.id)
-      // console.log("prod socketid", producerSocketId)
 
       const socketId = socket.id;
       callback({
@@ -42,7 +40,6 @@ export default function consumeHandler(socket: Socket) {
         producerId: producerId,
         kind: consumer.kind,
         rtpParameters: consumer.rtpParameters,
-        // producerSocketId: producerSocketId,
         socketId: socketId
       });
     } catch (error) {
