@@ -12,7 +12,8 @@ export const mediasoupHandler = async ({
   remoteStreamRef,
   remoteStreams,
   setRemoteStreams,
-  myVideoRef
+  myVideoRef,
+  localStream
 }: {
   socket: Socket,
   socketId: string,
@@ -20,7 +21,8 @@ export const mediasoupHandler = async ({
   remoteStreamRef: RefObject<Map<string, MediaStream>>,
   remoteStreams: RemoteStreamsType[],
   setRemoteStreams: React.Dispatch<React.SetStateAction<RemoteStreamsType[]>>; // react state type -> https://stackoverflow.com/a/65824149
-  myVideoRef: RefObject<HTMLVideoElement | null>
+  myVideoRef: RefObject<HTMLVideoElement | null>,
+  localStream: MediaStream
 }) => {
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
@@ -123,17 +125,11 @@ export const mediasoupHandler = async ({
       },
     );
 
-    const myStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-
     if (myVideoRef.current) {
-      myVideoRef.current.srcObject = myStream;
+      myVideoRef.current.srcObject = localStream;
     }
-
-    const videoTrack = myStream.getVideoTracks()[0];
-    const audioTrack = myStream.getAudioTracks()[0];
+    const videoTrack = localStream.getVideoTracks()[0];
+    const audioTrack = localStream.getAudioTracks()[0];
     await sendTransport.produce({ track: videoTrack });
     await sendTransport.produce({ track: audioTrack });
 

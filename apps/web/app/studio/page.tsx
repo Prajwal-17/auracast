@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
 import useMediasoupWebrtc from "../hooks/useMediasoupWebrtc";
 import useSocket from "../hooks/useSocket";
+import { useRef } from "react";
 
 export default function Studio() {
   const { socketId, socketRef } = useSocket();
+
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   const {
     roomId,
@@ -16,7 +19,54 @@ export default function Studio() {
     joinRoom,
     remoteStreamRef,
     remoteStreams,
+    localStream,
   } = useMediasoupWebrtc(socketId, socketRef);
+
+  function handleRecord() {
+    if (!localStream) {
+      console.log("No local stream");
+      return;
+    }
+    console.log("recording");
+    recordedChunksRef.current = [];
+
+    let chunks: any = [];
+
+    const recorder = new MediaRecorder(localStream, { mimeType: "video/mp4" });
+
+    recorder.ondataavailable = (e) => {
+      if (!recordedChunksRef.current) {
+        return;
+      }
+      recordedChunksRef.current.push(e.data);
+    };
+
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, {
+        type: recorder.mimeType,
+      });
+
+      console.log("blob", blob);
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `recording_${new Date().toISOString()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    };
+
+    recorder.start(1000);
+
+    setTimeout(() => {
+      console.log("stop recording");
+      recorder.stop();
+    }, 15000);
+  }
 
   return (
     <>
@@ -58,6 +108,9 @@ export default function Studio() {
           <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
           <Button onClick={() => createRoom()} className="my-4">
             Create Room
+          </Button>
+          <Button onClick={handleRecord} type="button" variant="destructive">
+            Record
           </Button>
           {roomId && <div>{roomId}</div>}
           {roomId && <div>{roomId}</div>}

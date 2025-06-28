@@ -14,7 +14,8 @@ type useMediasoupWebrtc = {
   createRoom: () => Promise<void>,
   joinRoom: (roomId: string) => Promise<void>,
   remoteStreamRef: RefObject<Map<string, MediaStream>>,
-  remoteStreams: RemoteStreamsType[]
+  remoteStreams: RemoteStreamsType[],
+  localStream: MediaStream | undefined
 }
 
 export default function useMediasoupWebrtc(socketId: string | null, socketRef: RefObject<Socket | null>): useMediasoupWebrtc {
@@ -23,6 +24,8 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
 
   const [remoteStreams, setRemoteStreams] = useState<RemoteStreamsType[]>([]);
   const remoteStreamRef = useRef<Map<string, MediaStream>>(new Map());
+
+  const [localStream, setLocalStream] = useState<MediaStream>()
 
   async function createRoom() {
     try {
@@ -60,6 +63,13 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
   const startCall = async (roomId: string) => {
     if (!socketRef.current || !socketId) return;
 
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    })
+
+    setLocalStream(stream)
+
     await mediasoupHandler({
       socket: socketRef.current,
       socketId,
@@ -67,7 +77,8 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
       remoteStreamRef,
       remoteStreams,
       setRemoteStreams,
-      myVideoRef
+      myVideoRef,
+      localStream: stream
     })
   }
 
@@ -79,6 +90,7 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
     createRoom,
     joinRoom,
     remoteStreamRef,
-    remoteStreams
+    remoteStreams,
+    localStream
   }
 }
