@@ -45,6 +45,7 @@ export async function setupSocket(io: Server) {
         });
 
         if (!session || session === null) {
+          console.log("no session")
           return next(new Error("Invalid Session: Disconnected"))
         }
 

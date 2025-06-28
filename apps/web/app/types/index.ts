@@ -24,3 +24,8 @@ export type MediasoupStoreType = {
   consumers: RouterObjectsType[],
   setConsumers: () => void
 }
+
+export type RemoteStreamsType = {
+  socketId: string,
+  stream: MediaStream
+}
