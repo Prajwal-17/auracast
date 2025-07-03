@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
@@ -24,13 +24,16 @@
     "lucide-react": "^0.511.0",
     "mediasoup-client": "^3.11.0",
     "next": "^15.3.0",
+    "next-themes": "^0.4.6",
     "postcss": "^8.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "short-uuid": "^5.2.0",
     "socket.io-client": "^4.8.1",
+    "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "4",
+    "zod": "^3.25.67",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

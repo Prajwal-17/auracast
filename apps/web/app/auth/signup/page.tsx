@@ -8,33 +8,72 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import * as z from "zod/v4";
+import { CircleAlert, LoaderCircle } from "lucide-react";
+import { toast } from "sonner";
+
+const signupSchema: z.ZodObject = z.object({
+  name: z.string().min(3, { message: "Name must be atleast 3 characters" }),
+  email: z.email({ message: "Email is invalid" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be atleast 6 characters" }),
+});
 
 export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldError, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
   async function handleSignup() {
+    setLoading(true);
     try {
+      const validatedSchema = signupSchema.safeParse({
+        name,
+        email,
+        password,
+      });
+
+      if (!validatedSchema.success) {
+        const newErrors: { [key: string]: string } = {};
+        validatedSchema.error.issues.forEach((issue) => {
+          const field = issue.path[0] as string;
+          newErrors[field] = issue.message;
+        });
+
+        setFieldErrors(newErrors);
+        setLoading(false);
+        return;
+      }
+
+      const {
+        email: validatedEmail,
+        password: validatedPassword,
+        name: validatedName,
+      } = validatedSchema.data;
+
       const { data, error } = await authClient.signUp.email({
-        email: email,
-        password: password,
-        name: name,
+        email: validatedEmail as string,
+        password: validatedPassword as string,
+        name: validatedName as string,
       });
 
       if (data) {
-        console.log("success");
+        toast.success("Account creation successful");
         router.push("/");
       }
 
       if (error) {
-        console.log("Error", error);
-        
+        toast.error(error.message);
       }
+      setLoading(false);
     } catch (error) {
-      console.log(error);
+      toast.error("Something went wrong");
+      console.log("Sign up error", error);
     }
   }
 
@@ -82,7 +121,7 @@ export default function Signup() {
                     d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
                   ></path>
                 </svg>
-                Sign In With Google
+                Sign Up With Google
               </Button>
             </div>
 
@@ -100,12 +139,22 @@ export default function Signup() {
                 </Label>
                 <Input
                   id="name"
+                  disabled={loading}
                   placeholder="Rock"
                   type="text"
                   value={name}
                   className="border-input placeholder:text-muted-foreground focus-visible:ring-background"
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, name: "" }));
+                  }}
                 />
+                {fieldError.name && (
+                  <div className="text-destructive my-0 flex items-center justify-start gap-1 px-3 text-xs font-medium">
+                    <CircleAlert size={13} />
+                    {fieldError.name}
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
@@ -113,12 +162,22 @@ export default function Signup() {
                 </Label>
                 <Input
                   id="email"
+                  disabled={loading}
                   placeholder="m@example.com"
                   type="email"
                   value={email}
                   className="border-input placeholder:text-muted-foreground focus-visible:ring-background"
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, email: "" }));
+                  }}
                 />
+                {fieldError.email && (
+                  <div className="text-destructive my-0 flex items-center justify-start gap-1 px-3 text-xs font-medium">
+                    <CircleAlert size={13} />
+                    {fieldError.email}
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
@@ -126,20 +185,34 @@ export default function Signup() {
                 </Label>
                 <Input
                   id="password"
+                  disabled={loading}
                   type="password"
                   value={password}
                   className="border-input placeholder:text-muted-foreground focus-visible:ring-background"
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, password: "" }));
+                  }}
                 />
+                {fieldError.password && (
+                  <div className="text-destructive my-0 flex items-center justify-start gap-1 px-3 text-xs font-medium">
+                    <CircleAlert size={13} />
+                    {fieldError.password}
+                  </div>
+                )}
               </div>
               <div className="mt-6">
                 <Button
-                  className="text-primary-foreground focus-visible:ring-background border-input w-full hover:cursor-pointer"
+                  className="text-primary-foreground focus-visible:ring-background border-input w-full font-semibold hover:cursor-pointer"
+                  disabled={loading}
                   type="submit"
                   variant="default"
                   onClick={handleSignup}
                 >
-                  Create Account
+                  {loading && (
+                    <LoaderCircle size={14} className="animate-spin" />
+                  )}
+                  {loading ? "Creating Account ..." : "Create Account"}
                 </Button>
               </div>
               <div className="text-muted-foreground text-center text-sm font-medium">
