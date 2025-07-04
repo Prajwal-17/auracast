@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -20,10 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${jakartaSans.className}`}>
-        {children}
-        <Toaster richColors />
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <main>
+            {children}
+            <Toaster richColors />
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );
