@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Moon, SquarePlay, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -8,12 +8,12 @@ export default function HomeNav() {
 
   return (
     <>
-      <div className="px-7 py-3">
+      <div className="px-7 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-center gap-2">
             <SquarePlay size={25} />
             <span className="text-foreground text-xl font-extrabold">
-              Riverside
+              Auracast
             </span>
           </div>
           <button

@@ -12,21 +12,21 @@ export default function Sidebar() {
           <div className="space-y-4">
             <Link
               href="/home"
-              className="hover:bg-accent hover:text-accent-foreground flex items-center justify-start gap-2 rounded-md px-4 py-2 font-medium hover:cursor-pointer"
+              className="hover:bg-accent hover:text-accent-foreground flex items-center justify-start gap-2 rounded-md px-4 py-2 font-semibold hover:cursor-pointer"
             >
               <House size={24} />
               <span>Home</span>
             </Link>
             <Link
               href="/projects"
-              className="hover:bg-accent hover:text-accent-foreground flex items-center justify-start gap-2 rounded-md px-4 py-2 font-medium hover:cursor-pointer"
+              className="hover:bg-accent hover:text-accent-foreground flex items-center justify-start gap-2 rounded-md px-4 py-2 font-semibold hover:cursor-pointer"
             >
               <FolderOpen size={24} />
               Projects
             </Link>
             <Link
               href="/settings"
-              className="hover:bg-accent hover:text-accent-foreground flex items-center justify-start gap-2 rounded-md px-4 py-2 font-medium hover:cursor-pointer"
+              className="hover:bg-accent hover:text-accent-foreground flex items-center justify-start gap-2 rounded-md px-4 py-2 font-semibold hover:cursor-pointer"
             >
               <Settings size={24} />
               Settings

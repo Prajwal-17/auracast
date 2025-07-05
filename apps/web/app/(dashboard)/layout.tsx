@@ -1,6 +1,5 @@
+import DashboardLayoutContainer from "@/components/dashboard/DashboardLayoutContainer";
 import type { Metadata } from "next";
-import Sidebar from "@/components/Sidebar";
-import HomeNav from "@/components/HomeNav";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -12,15 +11,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="bg-sidebar flex h-screen min-h-screen flex-col">
-      <HomeNav />
-      <div className="flex h-full overflow-hidden">
-        <Sidebar />
-        <main className="h-full flex-1 overflow-y-auto rounded-tl-sm border border-r-0 border-b-0 px-3 py-4">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+  return <DashboardLayoutContainer>{children}</DashboardLayoutContainer>;
 }

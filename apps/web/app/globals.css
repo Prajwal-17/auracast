@@ -32,7 +32,7 @@
   --sidebar-border: hsl(0 0% 92.1569%);
   --sidebar-ring: hsl(0 0% 0%);
   --font-sans: var(--font-jakarta), sans-serif;
-  --radius: 1.4rem;
+  --radius: 1.0rem;
   --shadow-2xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
   --shadow-sm: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 1px 2px -1px hsl(0 0% 0% / 0.16);
@@ -74,7 +74,7 @@
   --sidebar-border: hsl(222.8571 6.4220% 21.3725%);
   --sidebar-ring: hsl(257.6687 100% 68.0392%);
   --font-sans: var(--font-jakarta), sans-serif;
-  --radius: 1.4rem;
+  --radius: 1.0rem;
   --shadow-2xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
   --shadow-sm: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 1px 2px -1px hsl(0 0% 0% / 0.16);
