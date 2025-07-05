@@ -17,7 +17,7 @@ export default function DashboardLayoutContainer({
         <HomeNav />
         <div className="mb-2 flex h-full overflow-hidden">
           {isSidebarOpen && <Sidebar />}
-          <main className="bg-background mx-2 h-full flex-1 overflow-y-auto rounded-sm border px-3 py-3">
+          <main className="bg-background mx-2 h-full flex-1 overflow-y-auto rounded-sm border px-3 py-3 md:px-5">
             {children}
           </main>
         </div>

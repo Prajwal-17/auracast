@@ -1,13 +1,29 @@
 "use client";
 
-import { FolderOpen, House, LogOut, Settings } from "lucide-react";
+import { FolderOpen, House, LogOut, Settings, X } from "lucide-react";
 import { Button } from "./ui/button";
 import Link from "next/link";
+import { usePanelStore } from "@/store/panelStore";
 
 export default function Sidebar() {
+  const isSidebarOpen = usePanelStore((state) => state.isSidebarOpen);
+  const setIsSidebarOpen = usePanelStore((state) => state.setIsSidebarOpen);
+
   return (
     <>
-      <div className="bg-sidebar text-sidebar-foreground flex h-full w-full max-w-[230px] px-3 py-4">
+      <div
+        className={` ${isSidebarOpen ? "fixed block" : "hidden"} bg-sidebar text-sidebar-foreground top-0 left-0 z-50 mt-13 h-full w-full max-w-[230px] min-w-[50px] border px-3 py-4 md:relative md:my-0 md:block md:w-full md:rounded-none md:border-none md:py-0`}
+      >
+        <div className="flex items-center justify-end">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={setIsSidebarOpen}
+            className="flex items-center justify-center"
+          >
+            <X className="block md:hidden" size={16} />
+          </Button>
+        </div>
         <div className="flex w-full flex-col justify-between gap-4">
           <div className="space-y-4">
             <Link

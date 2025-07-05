@@ -1,27 +1,39 @@
 "use client";
 
-import { Moon, SquarePlay, Sun } from "lucide-react";
+import { AlignLeft, Moon, SquarePlay, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Button } from "./ui/button";
+import { usePanelStore } from "@/store/panelStore";
 
 export default function HomeNav() {
   const { theme, setTheme } = useTheme();
+  const setIsSidebarOpen = usePanelStore((state) => state.setIsSidebarOpen);
 
   return (
     <>
       <div className="px-7 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-center gap-2">
-            <SquarePlay size={25} />
-            <span className="text-foreground text-xl font-extrabold">
+            <AlignLeft
+              size={20}
+              onClick={setIsSidebarOpen}
+              className="block hover:cursor-pointer md:hidden"
+            />
+            <span className="mb-1 block text-center text-lg text-neutral-700 md:hidden lg:hidden">
+              /
+            </span>
+            <SquarePlay size={19} />
+            <span className="text-foreground text-lg font-extrabold">
               Auracast
             </span>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="hover:bg-muted rounded-full p-2 transition-colors"
           >
             {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          </Button>
         </div>
       </div>
     </>
