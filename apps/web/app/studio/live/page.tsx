@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
-import useMediasoupWebrtc from "../hooks/useMediasoupWebrtc";
-import useSocket from "../hooks/useSocket";
 import { useRef } from "react";
+import useSocket from "@/app/hooks/useSocket";
+import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
 
 export default function Studio() {
   const { socketId, socketRef } = useSocket();
