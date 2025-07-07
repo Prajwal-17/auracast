@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Disc2,
   LayoutGrid,
@@ -10,22 +12,52 @@ import {
   Video,
   VideoOff,
 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "../ui/button";
 
 export default function LivePageBottomNav() {
+  const [isMicOn, setIsMicOn] = useState<boolean>(false);
+  const [isVidOn, setIsVidOn] = useState<boolean>(false);
+
   return (
     <>
-      <div className="">
-        <div className="flex items-center">
-          <VideoOff />
-          <Phone className="rotate-140" />
-          <Video />
-          <Mic />
-          <MicOff />
-          <LayoutGrid />
-          <Users />
+      <div className="bg-sidebar flex w-full items-center px-4 py-5">
+        <div className="flex w-full items-center justify-center gap-4 pl-10">
+          <Button
+            className="cursor-pointer font-semibold"
+            variant="destructive"
+          >
+            <Disc2 />
+            Record
+          </Button>
+          <Button
+            size="icon"
+            variant={isMicOn ? "outline" : "destructive"}
+            onClick={() => setIsMicOn((prev) => !prev)}
+            className="cursor-pointer"
+          >
+            {isMicOn ? <Mic /> : <MicOff />}
+          </Button>
+          <Button
+            size="icon"
+            variant={isVidOn ? "outline" : "destructive"}
+            onClick={() => setIsVidOn((prev) => !prev)}
+            className="cursor-pointer"
+          >
+            {isVidOn ? <Video /> : <VideoOff />}
+          </Button>
+          <Button variant="outline" size="icon" className="cursor-pointer">
+            <MonitorUp />
+          </Button>
+
+          <Button className="cursor-pointer">
+            <Phone className="rotate-136" />
+          </Button>
+        </div>
+        <div className="flex items-center justify-center gap-3">
           <MessageSquareText />
-          <MonitorUp />
-          <Disc2 />
+          <Users />
+          <LayoutGrid />
         </div>
       </div>
     </>

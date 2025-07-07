@@ -1,7 +1,7 @@
 export default function LivePageSidebar() {
   return (
     <>
-      <div>LivePage Sidebar</div>
+      <div className="hidden">LivePage Sidebar</div>
     </>
   );
 }

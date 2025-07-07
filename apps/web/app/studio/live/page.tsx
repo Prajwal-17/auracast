@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import useSocket from "@/app/hooks/useSocket";
 import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
 import LivePageNav from "@/components/livepage/LivePageNav";
@@ -73,55 +73,62 @@ export default function Studio() {
 
   return (
     <>
-      <div>
-        <LivePageNav />
-        {/* Video component  */}
+      <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full flex-col">
+          <LivePageNav />
+          <div className="flex-1">
+            <div>
+              <video
+                ref={myVideoRef}
+                muted
+                autoPlay
+                playsInline
+                style={{
+                  width: "300px",
+                  margin: "5px",
+                  height: "auto",
+                  transform: "scaleX(-1)", // Mirror effect
+                  display: "block",
+                }}
+              />
+              <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
+                My Video
+              </div>
+            </div>
+            <div>
+              {remoteStreams.map(({ socketId, stream }, idx) => (
+                <RemoteVideo key={idx} socketId={socketId} stream={stream} />
+              ))}
+            </div>
 
-        <div>
-          <video
-            ref={myVideoRef}
-            muted
-            autoPlay
-            playsInline
-            style={{
-              width: "300px",
-              margin: "5px",
-              height: "auto",
-              transform: "scaleX(-1)", // Mirror effect
-              display: "block",
-            }}
-          />
-          <div className="m-4 inline-block rounded-lg bg-black p-3 text-white">
-            My Video
+            <div>
+              <div>
+                <input
+                  type="text"
+                  value={roomId}
+                  className="border-2"
+                  onChange={(e) => setRoomId(e.target.value)}
+                />
+              </div>
+              <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
+              <Button onClick={() => createRoom()} className="my-4">
+                Create Room
+              </Button>
+              <Button
+                onClick={handleRecord}
+                type="button"
+                variant="destructive"
+              >
+                Record
+              </Button>
+              {roomId && <div>{roomId}</div>}
+              {roomId && <div>{roomId}</div>}
+            </div>
           </div>
-        </div>
-        <div>
-          {remoteStreams.map(({ socketId, stream }, idx) => (
-            <RemoteVideo key={idx} socketId={socketId} stream={stream} />
-          ))}
+          <LivePageBottomNav />
         </div>
 
-        <div>
-          <div>
-            <input
-              type="text"
-              value={roomId}
-              className="border-2"
-              onChange={(e) => setRoomId(e.target.value)}
-            />
-          </div>
-          <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
-          <Button onClick={() => createRoom()} className="my-4">
-            Create Room
-          </Button>
-          <Button onClick={handleRecord} type="button" variant="destructive">
-            Record
-          </Button>
-          {roomId && <div>{roomId}</div>}
-          {roomId && <div>{roomId}</div>}
-        </div>
         <LivePageSidebar />
-        <LivePageBottomNav />
       </div>
     </>
   );
