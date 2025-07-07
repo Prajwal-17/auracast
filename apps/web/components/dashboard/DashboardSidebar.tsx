@@ -1,11 +1,11 @@
 "use client";
 
 import { FolderOpen, House, LogOut, Settings, X } from "lucide-react";
-import { Button } from "./ui/button";
 import Link from "next/link";
 import { usePanelStore } from "@/store/panelStore";
+import { Button } from "../ui/button";
 
-export default function Sidebar() {
+export default function DashboardSidebar() {
   const isSidebarOpen = usePanelStore((state) => state.isSidebarOpen);
   const setIsSidebarOpen = usePanelStore((state) => state.setIsSidebarOpen);
 

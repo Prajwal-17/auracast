@@ -1,6 +1,6 @@
 "use client";
 
-import HomeNav from "@/components/HomeNav";
+import DashboardNav from "@/components/dashboard/DashboardNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
@@ -43,7 +43,7 @@ export default function Lobby() {
   return (
     <>
       <div className="flex h-full min-h-screen w-full flex-col justify-between">
-        <HomeNav />
+        <DashboardNav />
         <div className="mb-32 flex w-full flex-1 items-center justify-center px-3 py-2 md:px-7">
           <div className="w-full gap-16 px-5 py-4 md:flex md:items-center md:justify-center">
             <div className="text-card-foreground space-y-5 py-5 md:px-5">

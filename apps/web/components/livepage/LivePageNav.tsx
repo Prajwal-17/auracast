@@ -2,10 +2,10 @@
 
 import { AlignLeft, Moon, SquarePlay, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "./ui/button";
 import { usePanelStore } from "@/store/panelStore";
+import { Button } from "../ui/button";
 
-export default function HomeNav() {
+export default function LivePageNav() {
   const { theme, setTheme } = useTheme();
   const setIsSidebarOpen = usePanelStore((state) => state.setIsSidebarOpen);
 

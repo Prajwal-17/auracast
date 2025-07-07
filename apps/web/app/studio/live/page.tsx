@@ -5,6 +5,9 @@ import { RemoteVideo } from "@/components/RemoteVideo";
 import { useRef } from "react";
 import useSocket from "@/app/hooks/useSocket";
 import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
+import LivePageNav from "@/components/livepage/LivePageNav";
+import LivePageSidebar from "@/components/livepage/LivePageSidebar";
+import LivePageBottomNav from "@/components/livepage/LivePageBottomNav";
 
 export default function Studio() {
   const { socketId, socketRef } = useSocket();
@@ -71,7 +74,9 @@ export default function Studio() {
   return (
     <>
       <div>
-        <div>Welcome to studio</div>
+        <LivePageNav />
+        {/* Video component  */}
+
         <div>
           <video
             ref={myVideoRef}
@@ -115,6 +120,8 @@ export default function Studio() {
           {roomId && <div>{roomId}</div>}
           {roomId && <div>{roomId}</div>}
         </div>
+        <LivePageSidebar />
+        <LivePageBottomNav />
       </div>
     </>
   );

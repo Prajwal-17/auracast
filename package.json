@@ -1,5 +1,5 @@
 {
-  "name": "riverside_clone",
+  "name": "auracast",
   "private": true,
   "scripts": {
     "build": "turbo run build",

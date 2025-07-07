@@ -1,8 +1,8 @@
 "use client";
 
 import { usePanelStore } from "@/store/panelStore";
-import HomeNav from "../HomeNav";
-import Sidebar from "../Sidebar";
+import DashboardNav from "./DashboardNav";
+import DashboardSidebar from "./DashboardSidebar";
 
 export default function DashboardLayoutContainer({
   children,
@@ -14,9 +14,9 @@ export default function DashboardLayoutContainer({
   return (
     <>
       <div className="bg-sidebar flex h-screen min-h-screen flex-col">
-        <HomeNav />
+        <DashboardNav />
         <div className="mb-2 flex h-full overflow-hidden">
-          {isSidebarOpen && <Sidebar />}
+          {isSidebarOpen && <DashboardSidebar />}
           <main className="bg-background mx-2 h-full flex-1 overflow-y-auto rounded-sm border px-3 py-3 md:px-5">
             {children}
           </main>
