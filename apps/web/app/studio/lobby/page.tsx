@@ -3,6 +3,7 @@
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toggleAudio, toggleVideo } from "@/lib/videoUtils";
 import { useCallStore } from "@/store/useCallStore";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,8 +24,8 @@ export default function Lobby() {
     return <div>Invalid Params</div>;
   }
 
-  const [isMicOn, setIsMicOn] = useState<boolean>(false);
-  const [isVidOn, setIsVidOn] = useState<boolean>(false);
+  const [isMicOn, setIsMicOn] = useState<boolean>(true);
+  const [isVidOn, setIsVidOn] = useState<boolean>(true);
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -32,6 +33,7 @@ export default function Lobby() {
   const setRoomId = useCallStore((state) => state.setRoomId);
   const name = useCallStore((state) => state.name);
   const setName = useCallStore((state) => state.setName);
+  const localStream = useCallStore((state) => state.localStream);
   const setLocalStream = useCallStore((state) => state.setLocalStream);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -52,6 +54,24 @@ export default function Lobby() {
 
     getStream();
   }, [isVidOn]);
+
+  function handleVideo() {
+    if (!localStream) {
+      console.log("Local stream does not exist");
+      return;
+    }
+    toggleVideo(localStream);
+    setIsVidOn((prev) => !prev);
+  }
+
+  function handleAudio() {
+    if (!localStream) {
+      console.log("Local stream does not exist");
+      return;
+    }
+    toggleAudio(localStream);
+    setIsMicOn((prev) => !prev);
+  }
 
   function handleStartStudio() {
     setLoading(true);
@@ -79,11 +99,6 @@ export default function Lobby() {
     setLoading(true);
     if (!name || !roomId) {
       toast.error("Fields are missing");
-      setLoading(false);
-      return;
-    }
-    if (!roomId) {
-      toast.error("Error creating room");
       setLoading(false);
       return;
     }
@@ -168,14 +183,14 @@ export default function Lobby() {
                 <Button
                   size="icon"
                   variant={isMicOn ? "ghost" : "destructive"}
-                  onClick={() => setIsMicOn((prev) => !prev)}
+                  onClick={handleAudio}
                 >
                   {isMicOn ? <Mic /> : <MicOff />}
                 </Button>
                 <Button
                   size="icon"
                   variant={isVidOn ? "ghost" : "destructive"}
-                  onClick={() => setIsVidOn((prev) => !prev)}
+                  onClick={handleVideo}
                 >
                   {isVidOn ? <Video /> : <VideoOff />}
                 </Button>

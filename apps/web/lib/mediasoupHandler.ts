@@ -35,7 +35,7 @@ export const mediasoupHandler = async ({
     }
 
     const rtpCapabilities = await socket
-      .timeout(6000)
+      .timeout(15000)
       .emitWithAck("getRtpCapabilities", roomId);
 
     // check rtp cap
@@ -43,7 +43,7 @@ export const mediasoupHandler = async ({
     await device.load({ routerRtpCapabilities: rtpCapabilities });
 
     const sendTransportOptions = await socket
-      .timeout(6000)
+      .timeout(15000)
       .emitWithAck("createSendTransport", roomId);
 
     // check for send transport
@@ -62,7 +62,7 @@ export const mediasoupHandler = async ({
     const sendTransportId = sendTransport.id;
     sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
       try {
-        await socket.timeout(10000).emitWithAck("send-transport-connect", {
+        await socket.timeout(15000).emitWithAck("send-transport-connect", {
           roomId,
           sendTransportId,
           dtlsParameters,
@@ -76,7 +76,7 @@ export const mediasoupHandler = async ({
     });
 
     const recvTransportOptions = await socket
-      .timeout(10000)
+      .timeout(15000)
       .emitWithAck("createRecvTransport", roomId);
 
     recvTransport = device.createRecvTransport({
@@ -93,7 +93,7 @@ export const mediasoupHandler = async ({
     const recvTransportId = recvTransport.id;
     recvTransport.on("connect", async ({ dtlsParameters }, callback) => {
       try {
-        await socket.timeout(12000).emitWithAck("recv-transport-connect", {
+        await socket.timeout(15000).emitWithAck("recv-transport-connect", {
           roomId,
           recvTransportId,
           dtlsParameters,
@@ -110,7 +110,7 @@ export const mediasoupHandler = async ({
       async ({ kind, rtpParameters }, mediasoupCallback) => {
         try {
           const producerId = await socket
-            .timeout(12000)
+            .timeout(15000)
             .emitWithAck("transport-produce", {
               roomId,
               sendTransportId,
@@ -146,7 +146,7 @@ export const mediasoupHandler = async ({
     });
 
     const { allProducers } = await socket
-      .timeout(12000)
+      .timeout(15000)
       .emitWithAck("getAllProducers", {
         roomId,
         socketId,
@@ -166,7 +166,7 @@ export const mediasoupHandler = async ({
     }) {
       try {
         const consumerData = await socket
-          ?.timeout(12000)
+          ?.timeout(15000)
           .emitWithAck("transport-consume", {
             roomId,
             recvTransportId,
@@ -184,7 +184,7 @@ export const mediasoupHandler = async ({
         // check for consumer
 
         const resumeResponse = await socket
-          ?.timeout(12000)
+          ?.timeout(15000)
           .emitWithAck("consumer-resume", {
             roomId: roomId,
             consumerId: consumer.id,

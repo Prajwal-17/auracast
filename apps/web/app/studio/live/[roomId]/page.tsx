@@ -2,21 +2,22 @@
 
 import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import useSocket from "@/app/hooks/useSocket";
 import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
 import LivePageNav from "@/components/livepage/LivePageNav";
 import LivePageSidebar from "@/components/livepage/LivePageSidebar";
 import LivePageBottomNav from "@/components/livepage/LivePageBottomNav";
 import { Input } from "@/components/ui/input";
+import { useParams } from "next/navigation";
 
 export default function Studio() {
+  const { roomId } = useParams<{ roomId: string }>();
   const { socketId, socketRef } = useSocket();
 
   const recordedChunksRef = useRef<Blob[]>([]);
 
   const {
-    roomId,
     setRoomId,
     myVideoRef,
     createRoom,
@@ -77,8 +78,8 @@ export default function Studio() {
       <div className="flex min-h-screen w-full">
         <div className="flex min-h-screen w-full flex-col">
           <LivePageNav />
-          <div className="flex-1">
-            <div>
+          <div className="w-full max-w-md flex-1">
+            <div className="">
               <video
                 ref={myVideoRef}
                 muted
