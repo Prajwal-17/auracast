@@ -8,6 +8,7 @@ import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
 import LivePageNav from "@/components/livepage/LivePageNav";
 import LivePageSidebar from "@/components/livepage/LivePageSidebar";
 import LivePageBottomNav from "@/components/livepage/LivePageBottomNav";
+import { Input } from "@/components/ui/input";
 
 export default function Studio() {
   const { socketId, socketRef } = useSocket();
@@ -103,7 +104,7 @@ export default function Studio() {
 
             <div>
               <div>
-                <input
+                <Input
                   type="text"
                   value={roomId}
                   className="border-2"

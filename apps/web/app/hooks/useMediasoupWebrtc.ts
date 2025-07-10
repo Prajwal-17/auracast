@@ -1,10 +1,10 @@
 "use client"
 
 import { RefObject, useRef, useState } from "react";
-import short from "short-uuid";
 import { mediasoupHandler } from "@/lib/mediasoupHandler";
 import { RemoteStreamsType } from "../types";
 import { Socket } from "socket.io-client";
+import ShortUniqueId from "short-unique-id"
 
 type useMediasoupWebrtc = {
   roomId: string,
@@ -36,10 +36,10 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
         return;
       }
 
-      const newRoomId = short().generate();
-      setRoomId(newRoomId);
+      const newRoomId = new ShortUniqueId({ length: 6, dictionary: "alphanum_upper" })
+      setRoomId(newRoomId.rnd());
       await socket.timeout(10000).emitWithAck("create-room", newRoomId);
-      await startCall(newRoomId);
+      await startCall(newRoomId.rnd());
     } catch (error) {
       console.log(error);
     }

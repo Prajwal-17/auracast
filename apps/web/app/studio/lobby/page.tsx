@@ -3,13 +3,17 @@
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCallStore } from "@/store/useCallStore";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import ShortUniqueId from "short-unique-id";
+import { toast } from "sonner";
 
 export default function Lobby() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode");
+  const router = useRouter();
 
   const isHost = mode === "host";
   const isJoin = mode === "join";
@@ -21,6 +25,14 @@ export default function Lobby() {
 
   const [isMicOn, setIsMicOn] = useState<boolean>(false);
   const [isVidOn, setIsVidOn] = useState<boolean>(false);
+
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const roomId = useCallStore((state) => state.roomId);
+  const setRoomId = useCallStore((state) => state.setRoomId);
+  const name = useCallStore((state) => state.name);
+  const setName = useCallStore((state) => state.setName);
+  const setLocalStream = useCallStore((state) => state.setLocalStream);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -34,11 +46,50 @@ export default function Lobby() {
         console.log("Video Ref does not exist");
         return;
       }
+      setLocalStream(stream);
       videoRef.current.srcObject = stream;
     }
 
     getStream();
   }, [isVidOn]);
+
+  function handleStartStudio() {
+    setLoading(true);
+    if (!name) {
+      toast.error("Name is missing");
+      setLoading(false);
+      return;
+    }
+    const uniqueId = new ShortUniqueId({
+      length: 6,
+      dictionary: "alphanum_upper",
+    });
+    const newRoomId = uniqueId.rnd();
+    setRoomId(newRoomId);
+    if (!newRoomId) {
+      toast.error("Error creating room");
+      setLoading(false);
+      return;
+    }
+    router.push(`/studio/live/${newRoomId}`);
+    setLoading(false);
+  }
+
+  function handleJoinStudio() {
+    setLoading(true);
+    if (!name || !roomId) {
+      toast.error("Fields are missing");
+      setLoading(false);
+      return;
+    }
+    if (!roomId) {
+      toast.error("Error creating room");
+      setLoading(false);
+      return;
+    }
+    router.push(`/studio/live/${roomId}`);
+    setLoading(false);
+  }
 
   return (
     <>
@@ -51,13 +102,43 @@ export default function Lobby() {
                 Ensure your mic and camera are working
               </div>
               <div className="flex flex-col items-center justify-center space-y-4">
-                <Input placeholder="Enter your name" className="w-full" />
+                <Input
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full"
+                />
                 {isJoin && (
-                  <Input placeholder="Enter studio id" className="w-full" />
+                  <Input
+                    required
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    placeholder="Enter studio id"
+                    className="w-full"
+                  />
                 )}
-                <Button className="w-full py-5">
-                  {isHost ? "Start Studio" : "Join Studio"}
-                </Button>
+                {isHost ? (
+                  <Button
+                    variant="default"
+                    size="default"
+                    disabled={loading}
+                    onClick={handleStartStudio}
+                    className="w-full py-5 font-semibold hover:cursor-pointer"
+                  >
+                    {loading ? "Starting Studio..." : "Start Studio"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="default"
+                    disabled={loading}
+                    onClick={handleJoinStudio}
+                    className="w-full py-5 font-semibold hover:cursor-pointer"
+                  >
+                    {loading ? "Joining Studio..." : "Join Studio"}
+                  </Button>
+                )}
               </div>
               <div className="text-muted-foreground text-sm font-medium">
                 You are joining as a {isHost ? "host" : "participant"}.

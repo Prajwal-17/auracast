@@ -28,7 +28,7 @@
     "postcss": "^8.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "short-uuid": "^5.2.0",
+    "short-unique-id": "^5.3.2",
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
