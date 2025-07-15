@@ -1,6 +1,6 @@
 "use client"
 
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { mediasoupHandler } from "@/lib/mediasoupHandler";
 import { RemoteStreamsType } from "../types";
 import { Socket } from "socket.io-client";
@@ -11,26 +11,36 @@ type useMediasoupWebrtc = {
   setRoomId: (roomId: string) => void,
   socketId: string | null,
   myVideoRef: RefObject<HTMLVideoElement | null>,
-  createRoom: () => Promise<void>,
+  createRoom: (roomId: string) => Promise<void>,
   joinRoom: (roomId: string) => Promise<void>,
   remoteStreamRef: RefObject<Map<string, MediaStream>>,
   remoteStreams: RemoteStreamsType[],
   localStream: MediaStream | undefined
 }
 
-export default function useMediasoupWebrtc(socketId: string | null, socketRef: RefObject<Socket | null>): useMediasoupWebrtc {
+export default function useMediasoupWebrtc(role: string, socketId: string, socketRef: RefObject<Socket | null>): useMediasoupWebrtc {
+
   const roomId = useCallStore((state) => state.roomId)
   const setRoomId = useCallStore((state) => state.setRoomId)
-
-  const myVideoRef = useRef<HTMLVideoElement>(null);
-
+  const localStream = useCallStore((state) => state.localStream)
+  const setLocalStream = useCallStore((state) => state.setLocalStream)
   const [remoteStreams, setRemoteStreams] = useState<RemoteStreamsType[]>([]);
   const remoteStreamRef = useRef<Map<string, MediaStream>>(new Map());
 
-  const localStream = useCallStore((state) => state.localStream)
-  const setLocalStream = useCallStore((state) => state.setLocalStream)
+  const myVideoRef = useRef<HTMLVideoElement>(null);
 
-  async function createRoom() {
+  useEffect(() => {
+    const setupCall = async () => {
+      if (role === "host") {
+        await createRoom(roomId);
+      } else if (role === "participant") {
+        await joinRoom(roomId);
+      }
+    }
+    setupCall()
+  }, [role, roomId, socketId, socketRef])
+
+  async function createRoom(roomId: string) {
     try {
       const socket = socketRef.current;
 
@@ -38,9 +48,8 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
         console.warn("Socket not initialized yet");
         return;
       }
-
       await socket.timeout(10000).emitWithAck("create-room", roomId);
-      await startCall(roomId, "start");
+      await startCall(roomId);
     } catch (error) {
       console.log(error);
     }
@@ -55,15 +64,19 @@ export default function useMediasoupWebrtc(socketId: string | null, socketRef: R
         return;
       }
       await socket.timeout(10000).emitWithAck("join-room", roomId);
-      await startCall(roomId, "join");
+      await startCall(roomId);
     } catch (error) {
       console.log(error);
     }
   }
 
 
-  const startCall = async (roomId: string, type: string) => {
-    if (!socketRef.current || !socketId) return;
+  const startCall = async (roomId: string) => {
+    if (!socketRef.current || !socketId) {
+      console.log("socker ref", socketRef.current)
+      console.warn("no socket Ref or socketId")
+      return;
+    };
 
     if (!localStream) {
       console.log("local stream null")

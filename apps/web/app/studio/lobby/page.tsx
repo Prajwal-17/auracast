@@ -13,11 +13,11 @@ import { toast } from "sonner";
 
 export default function Lobby() {
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode");
+  const role = searchParams.get("role");
   const router = useRouter();
 
-  const isHost = mode === "host";
-  const isJoin = mode === "join";
+  const isHost = role === "host";
+  const isJoin = role === "join";
 
   if (!isHost && !isJoin) {
     console.log("Invalid params");
@@ -39,20 +39,25 @@ export default function Lobby() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    async function getStream() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      });
-      if (!videoRef.current) {
-        console.log("Video Ref does not exist");
-        return;
+    async function handleStream() {
+      try {
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        if (!videoRef.current) {
+          console.log("Video Ref does not exist");
+          return;
+        }
+        setLocalStream(stream);
+        videoRef.current.srcObject = stream;
+      } catch (error) {
+        console.log(error)
       }
-      setLocalStream(stream);
-      videoRef.current.srcObject = stream;
     }
 
-    getStream();
+    handleStream();
   }, [isVidOn]);
 
   function handleVideo() {
@@ -91,7 +96,7 @@ export default function Lobby() {
       setLoading(false);
       return;
     }
-    router.push(`/studio/live/${newRoomId}`);
+    router.push(`/studio/live/${newRoomId}?role=host`);
     setLoading(false);
   }
 
@@ -102,7 +107,7 @@ export default function Lobby() {
       setLoading(false);
       return;
     }
-    router.push(`/studio/live/${roomId}`);
+    router.push(`/studio/live/${roomId}?role=participant`);
     setLoading(false);
   }
 

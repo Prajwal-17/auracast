@@ -126,7 +126,9 @@ export const mediasoupHandler = async ({
     );
 
     if (myVideoRef.current) {
+      console.log("inside ref", myVideoRef.current.srcObject)
       myVideoRef.current.srcObject = localStream;
+      console.log("inside ref 2", myVideoRef.current.srcObject)
     }
     const videoTrack = localStream.getVideoTracks()[0];
     const audioTrack = localStream.getAudioTracks()[0];

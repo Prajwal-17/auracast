@@ -2,20 +2,26 @@
 
 import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import useSocket from "@/app/hooks/useSocket";
 import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
 import LivePageNav from "@/components/livepage/LivePageNav";
 import LivePageSidebar from "@/components/livepage/LivePageSidebar";
 import LivePageBottomNav from "@/components/livepage/LivePageBottomNav";
 import { Input } from "@/components/ui/input";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function Studio() {
   const { roomId } = useParams<{ roomId: string }>();
+  const searchParams = useSearchParams();
+  const role = searchParams.get("role");
   const { socketId, socketRef } = useSocket();
 
   const recordedChunksRef = useRef<Blob[]>([]);
+
+  if (!role) {
+    return;
+  }
 
   const {
     setRoomId,
@@ -25,7 +31,7 @@ export default function Studio() {
     remoteStreamRef,
     remoteStreams,
     localStream,
-  } = useMediasoupWebrtc(socketId, socketRef);
+  } = useMediasoupWebrtc(role, socketId, socketRef);
 
   function handleRecord() {
     if (!localStream) {
@@ -102,7 +108,6 @@ export default function Studio() {
                 <RemoteVideo key={idx} socketId={socketId} stream={stream} />
               ))}
             </div>
-
             <div>
               <div>
                 <Input
@@ -113,7 +118,7 @@ export default function Studio() {
                 />
               </div>
               <Button onClick={() => joinRoom(roomId)}>Join Room</Button>
-              <Button onClick={() => createRoom()} className="my-4">
+              <Button onClick={() => createRoom(roomId)} className="my-4">
                 Create Room
               </Button>
               <Button

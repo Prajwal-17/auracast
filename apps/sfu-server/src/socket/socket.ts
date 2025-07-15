@@ -15,6 +15,7 @@ import { disconnectCleanup } from "./handlers/disconnect";
 export async function setupSocket(io: Server) {
 
   io.on("connection", (socket) => {
+    console.log("User connected", socket.id)
     createRoom(socket)
     joinRoom(socket);
     getRtpCapabilities(socket);

@@ -6,7 +6,7 @@ import { RefObject, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 
 type UseSocketType = {
-  socketId: string | null;
+  socketId: string;
   socketRef: RefObject<Socket | null>;
 }
 

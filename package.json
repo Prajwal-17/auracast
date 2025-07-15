@@ -16,5 +16,31 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
-  }
+  },
+  "version": "1.0.0",
+  "description": "```yaml {   \"worker\": \"workerObject\",   \"room\" => {     \"roomId1\": {       \"worker\": \"workerReference\",       \"router\": \"routerObject\",       \"peers\" => { // contains all the peer data         \"peerId1\": {    // peerId = socket.id           \"userId\": \"string\",           \"transports\": [\"transportId1\", \"transportId2\"],           \"producers\": [\"producerId1\", \"producerId2\"],           \"consumers\": [\"consumerId1\", \"consumerId2\"]         },         \"peerId2\": {           // ...         }       },       \"transports\" => {         \"transportId1\": \"transportObject\"       },       \"producers\" => {         \"producerId1\": \"producerObject\"       },       \"consumers\" => {         \"consumerId1\": \"consumerObject\"       },       \"peerConsumers\" => {         // peerId = socket.id         \"peerId1\": [\"producerIdA\", \"producerIdB\"] // contains producerIds which the peer has consumed       }     },     \"roomId2\": {       // ...     }   } } ```",
+  "main": "index.js",
+  "dependencies": {
+    "eslint": "^9.30.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-only-warn": "^1.1.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-turbo": "^2.5.4",
+    "eslint-scope": "^8.4.0",
+    "eslint-visitor-keys": "^4.2.1",
+    "prettier-plugin-tailwindcss": "^0.6.13",
+    "typescript-eslint": "^8.35.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prajwal-17/auracast.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Prajwal-17/auracast/issues"
+  },
+  "homepage": "https://github.com/Prajwal-17/auracast#readme"
 }
