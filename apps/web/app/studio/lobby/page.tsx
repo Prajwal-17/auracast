@@ -31,8 +31,8 @@ export default function Lobby() {
   const setRoomId = useCallStore((state) => state.setRoomId);
   const name = useCallStore((state) => state.name);
   const setName = useCallStore((state) => state.setName);
-  const localStream = useCallStore((state) => state.localStream);
-  const setLocalStream = useCallStore((state) => state.setLocalStream);
+  const localStream = useMediaControlsStore((state) => state.localStream);
+  const setLocalStream = useMediaControlsStore((state) => state.setLocalStream);
 
   const isMicOn = useMediaControlsStore((state) => state.isMicOn)
   const setIsMicOn = useMediaControlsStore((state) => state.setIsMicOn)

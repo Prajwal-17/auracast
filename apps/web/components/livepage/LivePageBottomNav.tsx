@@ -12,11 +12,12 @@ import {
   Video,
   VideoOff,
 } from "lucide-react";
-import { useEffect } from "react";
 import { Button } from "../ui/button";
-import { useCallStore } from "@/store/useCallStore";
 import { toggleAudio, toggleVideo } from "@/lib/videoUtils";
 import { useMediaControlsStore } from "@/store/mediaControlsStore";
+import { disconnectSocket } from "@/lib/socket/socket";
+import { useMediasoupStore } from "@/store/mediasoupStore";
+import { useCallStore } from "@/store/useCallStore";
 
 export default function LivePageBottomNav() {
   const isMicOn = useMediaControlsStore((state) => state.isMicOn)
@@ -24,10 +25,19 @@ export default function LivePageBottomNav() {
   const isVidOn = useMediaControlsStore((state) => state.isVidOn)
   const setIsVidOn = useMediaControlsStore((state) => state.setIsVidOn)
 
-  const localStream = useCallStore((state) => state.localStream)
+  const localStream = useMediaControlsStore((state) => state.localStream)
 
-  const videoProducer = useMediaControlsStore((state) => state.videoProducer)
-  const audioProducer = useMediaControlsStore((state) => state.audioProducer);
+  const videoProducer = useMediasoupStore((state) => state.videoProducer)
+  const audioProducer = useMediasoupStore((state) => state.audioProducer);
+
+  const setRoomId = useCallStore((state) => state.setRoomId)
+  const setName = useCallStore((state) => state.setName)
+  const setSocketId = useCallStore((state) => state.setSocketId)
+
+  const sendTransport = useMediasoupStore((state) => state.sendTransport)
+  const recvTransport = useMediasoupStore((state) => state.recvTransport)
+  const setSendTransport = useMediasoupStore((state) => state.setSendTransport)
+  const setRecvTransport = useMediasoupStore((state) => state.setRecvTransport)
 
   function handleVideo() {
     if (!localStream) {
@@ -47,7 +57,7 @@ export default function LivePageBottomNav() {
     }
   }
 
-  async function handleAudio() {
+  function handleAudio() {
     if (!localStream) {
       console.log("Local stream does not exist");
       return;
@@ -63,6 +73,20 @@ export default function LivePageBottomNav() {
     } else {
       audioProducer.resume();
     }
+  }
+
+  function handleEndCall() {
+    videoProducer?.close();
+    audioProducer?.close();
+    sendTransport?.close();
+    recvTransport?.close();
+    setSendTransport(undefined)
+    setRecvTransport(undefined)
+    localStream?.getTracks().forEach(track => track.stop())
+    disconnectSocket()
+    setRoomId("")
+    setSocketId("")
+    setName("")
   }
 
   return (
@@ -96,7 +120,9 @@ export default function LivePageBottomNav() {
             <MonitorUp />
           </Button>
 
-          <Button className="cursor-pointer">
+          <Button className="cursor-pointer"
+            onClick={handleEndCall}
+          >
             <Phone className="rotate-136" />
           </Button>
         </div>

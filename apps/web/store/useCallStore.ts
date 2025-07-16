@@ -7,8 +7,6 @@ type CallStoreType = {
   setSocketId: (newSocketId: string) => void
   name: string,
   setName: (newName: string) => void
-  localStream: MediaStream | undefined,
-  setLocalStream: (newStream: MediaStream) => void
 }
 
 export const useCallStore = create<CallStoreType>((set) => ({
@@ -26,10 +24,5 @@ export const useCallStore = create<CallStoreType>((set) => ({
   setName: (newName) => set(() => ({
     name: newName
   })),
-
-  localStream: undefined,
-  setLocalStream: (newStream) => set(() => ({
-    localStream: newStream
-  }))
 
 }))

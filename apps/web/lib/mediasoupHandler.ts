@@ -1,7 +1,5 @@
-import { RemoteStreamsType } from "@/app/types";
+import { mediasoupHandlerType } from "@/app/types";
 import * as mediasoupClient from "mediasoup-client";
-import { RefObject } from "react";
-import { Socket } from "socket.io-client";
 
 export const mediasoupHandler = async ({
   socket,
@@ -13,22 +11,13 @@ export const mediasoupHandler = async ({
   myVideoRef,
   localStream,
   setAudioProducer,
-  setVideoProducer
-}: {
-  socket: Socket,
-  socketId: string,
-  roomId: string,
-  remoteStreamRef: RefObject<Map<string, MediaStream>>,
-  remoteStreams: RemoteStreamsType[],
-  setRemoteStreams: React.Dispatch<React.SetStateAction<RemoteStreamsType[]>>; // react state type -> https://stackoverflow.com/a/65824149
-  myVideoRef: RefObject<HTMLVideoElement | null>,
-  localStream: MediaStream,
-  setAudioProducer: (newAudioProducer: mediasoupClient.types.Producer) => void,
-  setVideoProducer: (newVideoProducer: mediasoupClient.types.Producer) => void
-}) => {
+  setVideoProducer,
+  sendTransport,
+  recvTransport,
+  setSendTransport,
+  setRecvTransport
+}: mediasoupHandlerType) => {
   let device: mediasoupClient.types.Device;
-  let sendTransport: mediasoupClient.types.Transport;
-  let recvTransport: mediasoupClient.types.Transport;
 
   try {
     if (!socket) {
@@ -60,6 +49,7 @@ export const mediasoupHandler = async ({
         },
       ],
     });
+    setSendTransport(sendTransport)
 
     const sendTransportId = sendTransport.id;
     sendTransport.on("connect", async ({ dtlsParameters }, callback) => {
@@ -91,6 +81,7 @@ export const mediasoupHandler = async ({
         },
       ],
     });
+    setRecvTransport(recvTransport)
 
     const recvTransportId = recvTransport.id;
     recvTransport.on("connect", async ({ dtlsParameters }, callback) => {

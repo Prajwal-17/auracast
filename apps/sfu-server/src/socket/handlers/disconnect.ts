@@ -1,7 +1,6 @@
 import { Socket } from "socket.io";
 import { mediasoupState } from "../../mediasoup/mediasoupState";
 
-// export default function disconnectHandler(socket: Socket) {
 export async function disconnectCleanup(socket: Socket) {
   try {
     const roomId = socket.data.roomId;
