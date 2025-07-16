@@ -4,6 +4,7 @@ import DashboardNav from "@/components/dashboard/DashboardNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toggleAudio, toggleVideo } from "@/lib/videoUtils";
+import { useMediaControlsStore } from "@/store/mediaControlsStore";
 import { useCallStore } from "@/store/useCallStore";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -24,9 +25,6 @@ export default function Lobby() {
     return <div>Invalid Params</div>;
   }
 
-  const [isMicOn, setIsMicOn] = useState<boolean>(true);
-  const [isVidOn, setIsVidOn] = useState<boolean>(true);
-
   const [loading, setLoading] = useState<boolean>(false);
 
   const roomId = useCallStore((state) => state.roomId);
@@ -35,6 +33,11 @@ export default function Lobby() {
   const setName = useCallStore((state) => state.setName);
   const localStream = useCallStore((state) => state.localStream);
   const setLocalStream = useCallStore((state) => state.setLocalStream);
+
+  const isMicOn = useMediaControlsStore((state) => state.isMicOn)
+  const setIsMicOn = useMediaControlsStore((state) => state.setIsMicOn)
+  const isVidOn = useMediaControlsStore((state) => state.isVidOn)
+  const setIsVidOn = useMediaControlsStore((state) => state.setIsVidOn)
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -66,7 +69,7 @@ export default function Lobby() {
       return;
     }
     toggleVideo(localStream);
-    setIsVidOn((prev) => !prev);
+    setIsVidOn();
   }
 
   function handleAudio() {
@@ -75,7 +78,7 @@ export default function Lobby() {
       return;
     }
     toggleAudio(localStream);
-    setIsMicOn((prev) => !prev);
+    setIsMicOn();
   }
 
   function handleStartStudio() {

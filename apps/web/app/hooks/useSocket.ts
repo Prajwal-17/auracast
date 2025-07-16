@@ -1,7 +1,7 @@
 'use client'
 
 import { connectSocket, disconnectSocket, socketInstance } from "@/lib/socket/socket";
-import { useMediasoupStore } from "@/store/mediasoupStore";
+import { useCallStore } from "@/store/useCallStore";
 import { RefObject, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 
@@ -12,8 +12,8 @@ type UseSocketType = {
 
 export default function useSocket(): UseSocketType {
   const socketRef = useRef<Socket | null>(null);
-  const socketId = useMediasoupStore((state) => state.socketId);
-  const setSocketId = useMediasoupStore((state) => state.setSocketId);
+  const socketId = useCallStore((state) => state.socketId);
+  const setSocketId = useCallStore((state) => state.setSocketId);
 
   useEffect(() => {
     socketRef.current = socketInstance;

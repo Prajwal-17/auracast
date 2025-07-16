@@ -1,5 +1,3 @@
-"use client"
-
 import { RemoteStreamsType } from "@/app/types";
 import * as mediasoupClient from "mediasoup-client";
 import { RefObject } from "react";
@@ -13,7 +11,9 @@ export const mediasoupHandler = async ({
   remoteStreams,
   setRemoteStreams,
   myVideoRef,
-  localStream
+  localStream,
+  setAudioProducer,
+  setVideoProducer
 }: {
   socket: Socket,
   socketId: string,
@@ -22,7 +22,9 @@ export const mediasoupHandler = async ({
   remoteStreams: RemoteStreamsType[],
   setRemoteStreams: React.Dispatch<React.SetStateAction<RemoteStreamsType[]>>; // react state type -> https://stackoverflow.com/a/65824149
   myVideoRef: RefObject<HTMLVideoElement | null>,
-  localStream: MediaStream
+  localStream: MediaStream,
+  setAudioProducer: (newAudioProducer: mediasoupClient.types.Producer) => void,
+  setVideoProducer: (newVideoProducer: mediasoupClient.types.Producer) => void
 }) => {
   let device: mediasoupClient.types.Device;
   let sendTransport: mediasoupClient.types.Transport;
@@ -126,14 +128,14 @@ export const mediasoupHandler = async ({
     );
 
     if (myVideoRef.current) {
-      console.log("inside ref", myVideoRef.current.srcObject)
       myVideoRef.current.srcObject = localStream;
-      console.log("inside ref 2", myVideoRef.current.srcObject)
     }
     const videoTrack = localStream.getVideoTracks()[0];
     const audioTrack = localStream.getAudioTracks()[0];
-    await sendTransport.produce({ track: videoTrack });
-    await sendTransport.produce({ track: audioTrack });
+    const videoProducer = await sendTransport.produce({ track: videoTrack });
+    const audioProducer = await sendTransport.produce({ track: audioTrack });
+    setAudioProducer(audioProducer)
+    setVideoProducer(videoProducer)
 
     socket.on("new-producer", async ({ producerId, producerSocketId }) => {
       try {

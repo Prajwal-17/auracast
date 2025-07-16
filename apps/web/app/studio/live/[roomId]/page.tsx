@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import useSocket from "@/app/hooks/useSocket";
 import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
 import LivePageNav from "@/components/livepage/LivePageNav";

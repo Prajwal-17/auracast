@@ -12,12 +12,58 @@ import {
   Video,
   VideoOff,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect } from "react";
 import { Button } from "../ui/button";
+import { useCallStore } from "@/store/useCallStore";
+import { toggleAudio, toggleVideo } from "@/lib/videoUtils";
+import { useMediaControlsStore } from "@/store/mediaControlsStore";
 
 export default function LivePageBottomNav() {
-  const [isMicOn, setIsMicOn] = useState<boolean>(false);
-  const [isVidOn, setIsVidOn] = useState<boolean>(false);
+  const isMicOn = useMediaControlsStore((state) => state.isMicOn)
+  const setIsMicOn = useMediaControlsStore((state) => state.setIsMicOn)
+  const isVidOn = useMediaControlsStore((state) => state.isVidOn)
+  const setIsVidOn = useMediaControlsStore((state) => state.setIsVidOn)
+
+  const localStream = useCallStore((state) => state.localStream)
+
+  const videoProducer = useMediaControlsStore((state) => state.videoProducer)
+  const audioProducer = useMediaControlsStore((state) => state.audioProducer);
+
+  function handleVideo() {
+    if (!localStream) {
+      console.log("Local stream does not exist");
+      return;
+    }
+    if (!videoProducer) {
+      console.warn("Video producer not ready");
+      return;
+    }
+    setIsVidOn();
+    toggleVideo(localStream);
+    if (isVidOn) {
+      videoProducer.pause();
+    } else {
+      videoProducer.resume();
+    }
+  }
+
+  async function handleAudio() {
+    if (!localStream) {
+      console.log("Local stream does not exist");
+      return;
+    }
+    if (!audioProducer) {
+      console.warn("Audio producer not ready")
+      return
+    }
+    setIsMicOn();
+    toggleAudio(localStream);
+    if (isMicOn) {
+      audioProducer.pause();
+    } else {
+      audioProducer.resume();
+    }
+  }
 
   return (
     <>
@@ -33,7 +79,7 @@ export default function LivePageBottomNav() {
           <Button
             size="icon"
             variant={isMicOn ? "outline" : "destructive"}
-            onClick={() => setIsMicOn((prev) => !prev)}
+            onClick={handleAudio}
             className="cursor-pointer"
           >
             {isMicOn ? <Mic /> : <MicOff />}
@@ -41,7 +87,7 @@ export default function LivePageBottomNav() {
           <Button
             size="icon"
             variant={isVidOn ? "outline" : "destructive"}
-            onClick={() => setIsVidOn((prev) => !prev)}
+            onClick={handleVideo}
             className="cursor-pointer"
           >
             {isVidOn ? <Video /> : <VideoOff />}

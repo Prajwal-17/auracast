@@ -5,6 +5,7 @@ import { mediasoupHandler } from "@/lib/mediasoupHandler";
 import { RemoteStreamsType } from "../types";
 import { Socket } from "socket.io-client";
 import { useCallStore } from "@/store/useCallStore";
+import { useMediaControlsStore } from "@/store/mediaControlsStore";
 
 type useMediasoupWebrtc = {
   roomId: string,
@@ -23,11 +24,13 @@ export default function useMediasoupWebrtc(role: string, socketId: string, socke
   const roomId = useCallStore((state) => state.roomId)
   const setRoomId = useCallStore((state) => state.setRoomId)
   const localStream = useCallStore((state) => state.localStream)
-  const setLocalStream = useCallStore((state) => state.setLocalStream)
   const [remoteStreams, setRemoteStreams] = useState<RemoteStreamsType[]>([]);
   const remoteStreamRef = useRef<Map<string, MediaStream>>(new Map());
 
   const myVideoRef = useRef<HTMLVideoElement>(null);
+
+  // .getState() => https://github.com/pmndrs/zustand/discussions/2194#discussion-5846099
+  const { setAudioProducer, setVideoProducer } = useMediaControlsStore.getState()
 
   useEffect(() => {
     const setupCall = async () => {
@@ -73,7 +76,6 @@ export default function useMediasoupWebrtc(role: string, socketId: string, socke
 
   const startCall = async (roomId: string) => {
     if (!socketRef.current || !socketId) {
-      console.log("socker ref", socketRef.current)
       console.warn("no socket Ref or socketId")
       return;
     };
@@ -91,7 +93,9 @@ export default function useMediasoupWebrtc(role: string, socketId: string, socke
       remoteStreams,
       setRemoteStreams,
       myVideoRef,
-      localStream: localStream
+      localStream: localStream,
+      setAudioProducer,
+      setVideoProducer
     })
   }
 
