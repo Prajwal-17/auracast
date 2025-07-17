@@ -1,4 +1,4 @@
-import { mediasoupHandlerType } from "@/app/types";
+import { mediasoupHandlerType } from "@/types";
 import * as mediasoupClient from "mediasoup-client";
 
 export const mediasoupHandler = async ({

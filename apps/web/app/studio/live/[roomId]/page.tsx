@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { RemoteVideo } from "@/components/RemoteVideo";
 import { useRef } from "react";
-import useSocket from "@/app/hooks/useSocket";
-import useMediasoupWebrtc from "@/app/hooks/useMediasoupWebrtc";
+import useSocket from "@/hooks/useSocket";
+import useMediasoupWebrtc from "@/hooks/useMediasoupWebrtc";
 import LivePageNav from "@/components/livepage/LivePageNav";
 import LivePageSidebar from "@/components/livepage/LivePageSidebar";
 import LivePageBottomNav from "@/components/livepage/LivePageBottomNav";
